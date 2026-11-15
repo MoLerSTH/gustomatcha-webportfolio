@@ -6,6 +6,7 @@ import {
   NeoSectionHeader,
 } from '@/components/ui/NeoBrutalPrimitives';
 import { Phase1PrimitiveLab } from '@/components/phase1/Phase1PrimitiveLab';
+import { OperatorPortraitCard } from '@/components/sections/OperatorPortraitCard';
 
 const ENGINEERING_PILLARS = [
   {
@@ -58,52 +59,65 @@ export function AboutArchitectureSection() {
           windowTitle={`OPERATOR_DOSSIER // ${GUSTO_PROFILE.handle}`}
           windowTag={GUSTO_PROFILE.githubHandle}
           className="lg:col-span-7"
-          bodyClassName="space-y-5"
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <NeoBadge variant="dark" pulseDot dotVariant="mint">
-              SYSTEM ARCHITECT
-            </NeoBadge>
-            <NeoBadge variant="mint">{GUSTO_PROFILE.alias}</NeoBadge>
-          </div>
-
-          <h3 className="font-display text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-            {GUSTO_PROFILE.fullName} — {GUSTO_PROFILE.roleHeadline}
-          </h3>
-
-          <div className="space-y-3 text-sm leading-relaxed text-[var(--text-secondary)] sm:text-base">
-            {GUSTO_PROFILE.storyBody.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-
-          <dl className="grid gap-3 sm:grid-cols-2">
-            {GUSTO_PROFILE.telemetrySpecs.map((spec) => (
-              <div
-                key={spec.label}
-                className="neo-border bg-[var(--bg-canvas)] p-3"
-              >
-                <dt className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                  {spec.label}
-                </dt>
-                <dd className="mt-1 font-mono text-xs font-bold text-[var(--text-primary)]">
-                  {spec.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </NeoCard>
-
-        {/* Academic & Telemetry Specs */}
-        <NeoCard
-          variant="white"
-          headerVariant="dark"
-          windowTitle="ACADEMIC_NODE // TU_SE"
-          windowTag="ACTIVE"
-          className="lg:col-span-5"
           bodyClassName="flex flex-col justify-between gap-5"
         >
-          <div className="space-y-4">
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <NeoBadge variant="dark" pulseDot dotVariant="mint">
+                SYSTEM ARCHITECT
+              </NeoBadge>
+              <NeoBadge variant="mint">{GUSTO_PROFILE.alias}</NeoBadge>
+            </div>
+
+            <h3 className="font-display text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+              {GUSTO_PROFILE.fullName} — {GUSTO_PROFILE.roleHeadline}
+            </h3>
+
+            <div className="space-y-3 text-sm leading-relaxed text-[var(--text-secondary)] sm:text-base">
+              {GUSTO_PROFILE.storyBody.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+
+            <dl className="grid gap-3 sm:grid-cols-2">
+              {GUSTO_PROFILE.telemetrySpecs.map((spec) => (
+                <div
+                  key={spec.label}
+                  className="neo-border bg-[var(--bg-canvas)] p-3"
+                >
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                    {spec.label}
+                  </dt>
+                  <dd className="mt-1 font-mono text-xs font-bold text-[var(--text-primary)]">
+                    {spec.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="neo-border bg-[#0A0A0A] p-4 font-mono text-xs text-[#FFFFFF]">
+            <p className="font-bold text-[#FFE600]">
+              {'// ARCHITECTURE_GUARANTEE'}
+            </p>
+            <p className="mt-1 text-neutral-300">
+              Pure Three.js scene orchestration isolated from React reconcilers,
+              layered onto semantic HTML5 landmarks and GPU-composited micro-motion.
+            </p>
+          </div>
+        </NeoCard>
+
+        {/* Operator Sticker Cutout & Academic Specs */}
+        <div className="flex flex-col gap-6 lg:col-span-5">
+          <OperatorPortraitCard />
+
+          <NeoCard
+            variant="white"
+            headerVariant="dark"
+            windowTitle="ACADEMIC_NODE // TU_SE"
+            windowTag="ACTIVE"
+            bodyClassName="space-y-4"
+          >
             <div className="neo-border bg-[var(--bg-canvas)] p-4">
               <div className="mb-1 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 <GraduationCap className="size-4" aria-hidden="true" />
@@ -133,18 +147,8 @@ export function AboutArchitectureSection() {
                 <span>Open to Backend, AI Systems &amp; Creative Tech roles</span>
               </p>
             </div>
-          </div>
-
-          <div className="neo-border bg-[#0A0A0A] p-4 font-mono text-xs text-[#FFFFFF]">
-            <p className="font-bold text-[#FFE600]">
-              {'// ARCHITECTURE_GUARANTEE'}
-            </p>
-            <p className="mt-1 text-neutral-300">
-              Pure Three.js scene orchestration isolated from React reconcilers,
-              layered onto semantic HTML5 landmarks and GPU-composited micro-motion.
-            </p>
-          </div>
-        </NeoCard>
+          </NeoCard>
+        </div>
       </div>
 
       {/* 3 Engineering Pillars */}

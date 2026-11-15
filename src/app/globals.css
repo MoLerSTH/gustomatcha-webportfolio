@@ -412,6 +412,43 @@
   color: var(--bg-canvas);
 }
 
+/* Operator Portrait Sticker Cutout & Halftone Brand Stage */
+.neo-sticker-stage {
+  background-image: radial-gradient(
+    rgb(10 10 10 / 0.18) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 14px 14px;
+}
+
+.neo-sticker-cutout {
+  transform-origin: bottom center;
+  filter:
+    drop-shadow(3px 0 0 #ffffff)
+    drop-shadow(-3px 0 0 #ffffff)
+    drop-shadow(0 -3px 0 #ffffff)
+    drop-shadow(2px 2px 0 #0a0a0a)
+    drop-shadow(-2px -2px 0 #0a0a0a)
+    drop-shadow(5px 6px 0 #0a0a0a);
+  transition: transform 180ms ease-out;
+}
+
+@media (hover: hover) {
+  .neo-sticker-stage:hover .neo-sticker-cutout {
+    transform: scale(1.02);
+  }
+}
+
+:root[data-theme='overclock'] .neo-sticker-cutout {
+  filter:
+    drop-shadow(3px 0 0 #ffffff)
+    drop-shadow(-3px 0 0 #ffffff)
+    drop-shadow(0 -3px 0 #ffffff)
+    drop-shadow(2px 2px 0 #0a0a0a)
+    drop-shadow(-2px -2px 0 #0a0a0a)
+    drop-shadow(5px 6px 0 rgb(0 245 212 / 0.65));
+}
+
 /* Phase 4: Top-Layer Native <dialog> Transitions & Scroll-Lock Guard */
 dialog.neo-dialog {
   margin: auto;
@@ -538,6 +575,12 @@ dialog.neo-dialog::backdrop {
 
   .neo-overclock-deck:where([hidden], [data-closing]) {
     translate: none;
+  }
+
+  .neo-sticker-cutout,
+  .neo-sticker-stage:hover .neo-sticker-cutout {
+    transform: none;
+    transition: none;
   }
 
   ::view-transition-group(*),
