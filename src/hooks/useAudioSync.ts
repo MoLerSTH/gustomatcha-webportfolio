@@ -50,9 +50,12 @@ export function useAudioSync() {
     []
   );
 
-  const triggerSynthNote = useCallback((freqHz = 220, durationSec = 0.22) => {
-    getSharedAudioController().triggerSynthPulse(freqHz, durationSec);
-  }, []);
+  const triggerSynthNote = useCallback(
+    (freqHz = 220, durationSec = 0.22, waveform: OscillatorType = 'sawtooth') => {
+      getSharedAudioController().triggerSynthPulse(freqHz, durationSec, waveform);
+    },
+    []
+  );
 
   return {
     audioEnabled,

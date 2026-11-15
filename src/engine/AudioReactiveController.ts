@@ -134,19 +134,66 @@ export class AudioReactiveController {
     }
   }
 
-  public triggerSynthPulse(frequencyHz = 220, durationSec = 0.24): void {
+  public triggerSynthPulse(
+    frequencyHz = 220,
+    durationSec = 0.24,
+    waveform: OscillatorType = 'sawtooth'
+  ): void {
     this.transientBoost = Math.min(1, this.transientBoost + 0.55);
 
-    if (!this.ctx || this.ctx.state !== 'running') {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    try {
-      const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const noteGain = this.ctx.createGain();
+    if (!this.ctx) {
+      const AudioCtxClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!AudioCtxClass) {
+        return;
+      }
+      try {
+        this.ctx = new AudioCtxClass();
+      } catch {
+        return;
+      }
+    }
 
-      osc.type = 'sawtooth';
+    const ctx = this.ctx;
+    if (ctx.state === 'suspended') {
+      void ctx
+        .resume()
+        .then(() => {
+          if (this.ctx === ctx && ctx.state === 'running') {
+            this.scheduleOneShotTone(ctx, frequencyHz, durationSec, waveform);
+          }
+        })
+        .catch(() => {
+          // Ignore resume errors prior to user interaction
+        });
+      return;
+    }
+
+    if (ctx.state !== 'running') {
+      return;
+    }
+
+    this.scheduleOneShotTone(ctx, frequencyHz, durationSec, waveform);
+  }
+
+  private scheduleOneShotTone(
+    ctx: AudioContext,
+    frequencyHz: number,
+    durationSec: number,
+    waveform: OscillatorType
+  ): void {
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const noteGain = ctx.createGain();
+
+      osc.type = waveform;
       osc.frequency.setValueAtTime(frequencyHz, now);
 
       noteGain.gain.setValueAtTime(0.08, now);
@@ -156,7 +203,7 @@ export class AudioReactiveController {
       if (this.analyser) {
         noteGain.connect(this.analyser);
       } else {
-        noteGain.connect(this.ctx.destination);
+        noteGain.connect(ctx.destination);
       }
 
       osc.start(now);

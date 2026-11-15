@@ -24,4 +24,17 @@ describe('AudioReactiveController', () => {
     expect(controller.isEnabled()).toBe(false);
     controller.dispose();
   });
+
+  it('accepts selectable waveforms and boosts transient energy safely in Node/SSR', async () => {
+    const controller = new AudioReactiveController();
+    await controller.start();
+    const baseline = controller.sampleFrequencies(0.25);
+
+    controller.triggerSynthPulse(329.63, 0.2, 'square');
+    const boosted = controller.sampleFrequencies(0.25);
+
+    expect(boosted.overall).toBeGreaterThan(baseline.overall);
+    expect(boosted.overall).toBeLessThanOrEqual(1);
+    controller.dispose();
+  });
 });
