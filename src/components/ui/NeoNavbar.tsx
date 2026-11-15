@@ -216,7 +216,7 @@ export function NeoNavbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b-[3px] border-[var(--ui-border-color)] bg-[var(--bg-canvas)]">
+    <header className="neo-navbar-reveal sticky top-0 z-40 w-full border-b-[3px] border-[var(--ui-border-color)] bg-[var(--bg-canvas)]">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         {/* Brand Identity Link */}
         <div className="flex items-center gap-3">

@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type JSX,
 } from 'react';
 import {
@@ -28,8 +29,11 @@ import { GustoCanvasStage } from '@/components/three/GustoCanvasStage';
 import { KonamiGameBoyWidget } from './KonamiGameBoyWidget';
 import { TerminalBootOverlay } from './TerminalBootOverlay';
 import {
+  HERO_GALLERY_REVEAL_SLOTS,
+  HERO_REVEAL_TOTAL_DURATION_MS,
   deriveHeroBootViewState,
   resolveEffectiveBootStage,
+  resolvePostClosingStage,
   shouldAutoStartBoot,
   shouldRestoreFocusToMainOnBootEnd,
   waitForOverlayExitAnimations,
@@ -40,13 +44,19 @@ interface BootControllerState {
   stageOverride: HeroBootStage | null;
   elapsedMs: number;
   runId: number;
+  skipGalleryReveal: boolean;
 }
 
 const INITIAL_BOOT_CONTROLLER: BootControllerState = {
   stageOverride: null,
   elapsedMs: 0,
   runId: 0,
+  skipGalleryReveal: false,
 };
+
+function revealDelayStyle(delayMs: number): CSSProperties {
+  return { '--reveal-delay': `${delayMs}ms` } as CSSProperties;
+}
 
 const subscribeNoop = () => () => {};
 const getServerAutoBootFallback = () => false;
@@ -123,9 +133,9 @@ export function HeroSection(): JSX.Element {
           prev.runId === activeRunId &&
           (prev.stageOverride === null || prev.stageOverride === 'booting')
             ? {
+                ...prev,
                 stageOverride: 'closing',
                 elapsedMs: BOOT_TOTAL_DURATION_MS,
-                runId: prev.runId,
               }
             : prev
         );
@@ -148,7 +158,7 @@ export function HeroSection(): JSX.Element {
     };
   }, [activeStage, controller.runId, restoreFocusToMainIfNeeded]);
 
-  // Settle discrete @starting-style / [data-closing] exit transition before unmounting visibility
+  // Settle discrete @starting-style / [data-closing] exit transition before starting gallery reveal
   useEffect(() => {
     if (activeStage !== 'closing') return;
 
@@ -162,13 +172,34 @@ export function HeroSection(): JSX.Element {
       if (cancelled) return;
       setController((prev) =>
         prev.runId === activeRunId && prev.stageOverride === 'closing'
-          ? { ...prev, stageOverride: 'done' }
+          ? {
+              ...prev,
+              stageOverride: resolvePostClosingStage(prev.skipGalleryReveal),
+            }
           : prev
       );
     });
 
     return () => {
       cancelled = true;
+    };
+  }, [activeStage, controller.runId]);
+
+  // Complete the gallery exhibition stagger window cleanly so controls and static state settle
+  useEffect(() => {
+    if (activeStage !== 'revealing') return;
+
+    const activeRunId = controller.runId;
+    const timerId = setTimeout(() => {
+      setController((prev) =>
+        prev.runId === activeRunId && prev.stageOverride === 'revealing'
+          ? { ...prev, stageOverride: 'done' }
+          : prev
+      );
+    }, HERO_REVEAL_TOTAL_DURATION_MS);
+
+    return () => {
+      clearTimeout(timerId);
     };
   }, [activeStage, controller.runId]);
 
@@ -182,6 +213,7 @@ export function HeroSection(): JSX.Element {
             stageOverride: 'closing',
             elapsedMs: BOOT_TOTAL_DURATION_MS,
             runId: prev.runId + 1,
+            skipGalleryReveal: true,
           }
         : prev
     );
@@ -189,12 +221,15 @@ export function HeroSection(): JSX.Element {
 
   const handleReplayBoot = useCallback(() => {
     setController((prev) =>
-      prev.stageOverride === 'booting' || prev.stageOverride === 'closing'
+      prev.stageOverride === 'booting' ||
+      prev.stageOverride === 'closing' ||
+      prev.stageOverride === 'revealing'
         ? prev
         : {
             stageOverride: 'booting',
             elapsedMs: 0,
             runId: prev.runId + 1,
+            skipGalleryReveal: false,
           }
     );
   }, []);
@@ -204,14 +239,34 @@ export function HeroSection(): JSX.Element {
     [activeStage, controller.elapsedMs]
   );
 
+  // Sync root boot-stage attribute so header & lower page sections join the gallery reveal
+  useEffect(() => {
+    const root = document.documentElement;
+    if (viewState.revealPhase === 'visible') {
+      delete root.dataset.bootStage;
+    } else {
+      root.dataset.bootStage = viewState.revealPhase;
+    }
+  }, [viewState.revealPhase]);
+
+  useEffect(() => {
+    return () => {
+      delete document.documentElement.dataset.bootStage;
+    };
+  }, []);
+
   return (
     <>
       <section
         aria-labelledby="main-content"
-        className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start"
+        data-reveal-phase={viewState.revealPhase}
+        className="neo-hero-reveal grid grid-cols-1 gap-8 lg:grid-cols-12 items-start"
       >
         <div className="lg:col-span-7 space-y-6">
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div
+            className="neo-gallery-item flex flex-wrap items-center gap-2.5"
+            style={revealDelayStyle(HERO_GALLERY_REVEAL_SLOTS.badges.delayMs)}
+          >
             <NeoBadge variant="yellow" pulseDot dotVariant="coral">
               GUSTO_OS v2.6 // ONLINE
             </NeoBadge>
@@ -228,7 +283,8 @@ export function HeroSection(): JSX.Element {
           <h1
             id="main-content"
             tabIndex={-1}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.03] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FFE600]"
+            className="neo-gallery-item text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.03] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#FFE600]"
+            style={revealDelayStyle(HERO_GALLERY_REVEAL_SLOTS.headline.delayMs)}
           >
             Hi, I&apos;m{' '}
             <span className="inline-block border-[3px] border-[var(--ui-border-color)] bg-[#FFE600] text-[#0A0A0A] px-3 py-0.5 neo-shadow-sm">
@@ -237,15 +293,24 @@ export function HeroSection(): JSX.Element {
             — {GUSTO_PROFILE.fullName}
           </h1>
 
-          <p className="font-mono text-sm sm:text-base font-bold uppercase tracking-wider text-[var(--ink)] border-l-4 border-[#00F5D4] pl-3">
+          <p
+            className="neo-gallery-item font-mono text-sm sm:text-base font-bold uppercase tracking-wider text-[var(--ink)] border-l-4 border-[#00F5D4] pl-3"
+            style={revealDelayStyle(HERO_GALLERY_REVEAL_SLOTS.role.delayMs)}
+          >
             {GUSTO_PROFILE.roleHeadline}
           </p>
 
-          <p className="max-w-2xl text-lg sm:text-xl text-[var(--ink-muted)] leading-relaxed">
+          <p
+            className="neo-gallery-item max-w-2xl text-lg sm:text-xl text-[var(--ink-muted)] leading-relaxed"
+            style={revealDelayStyle(HERO_GALLERY_REVEAL_SLOTS.story.delayMs)}
+          >
             {GUSTO_PROFILE.storyLead}
           </p>
 
-          <div className="flex flex-wrap gap-3.5 pt-1">
+          <div
+            className="neo-gallery-item flex flex-wrap gap-3.5 pt-1"
+            style={revealDelayStyle(HERO_GALLERY_REVEAL_SLOTS.actions.delayMs)}
+          >
             <NeoButton
               href="#projects"
               variant="yellow"
@@ -276,7 +341,9 @@ export function HeroSection(): JSX.Element {
               variant="white"
               size="lg"
               onClick={handleReplayBoot}
-              disabled={viewState.isBooting || viewState.isOverlayClosing}
+              disabled={
+                viewState.isBooting || viewState.isOverlayClosing || viewState.isRevealing
+              }
               leftIcon={<RotateCcw className="size-5" />}
             >
               [REPLAY BOOT_SEQ]
@@ -285,10 +352,14 @@ export function HeroSection(): JSX.Element {
 
           {/* 4-Column Architectural Telemetry Strip */}
           <dl className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2 xl:grid-cols-4">
-            {GUSTO_PROFILE.telemetrySpecs.map((spec) => (
+            {GUSTO_PROFILE.telemetrySpecs.map((spec, index) => (
               <div
                 key={spec.label}
-                className="neo-border bg-[var(--bg-surface)] px-3.5 py-3 neo-shadow-sm"
+                className="neo-gallery-item neo-border bg-[var(--bg-surface)] px-3.5 py-3 neo-shadow-sm"
+                style={revealDelayStyle(
+                  HERO_GALLERY_REVEAL_SLOTS.telemetryBase.delayMs +
+                    index * HERO_GALLERY_REVEAL_SLOTS.telemetryBase.telemetryStepMs
+                )}
               >
                 <dt className="font-mono text-[11px] font-bold tracking-wider text-[var(--ink-muted)]">
                   {spec.label}
@@ -301,11 +372,19 @@ export function HeroSection(): JSX.Element {
           </dl>
 
           {/* Interactive Konami Code Pocket Console */}
-          <KonamiGameBoyWidget />
+          <div
+            className="neo-gallery-item"
+            style={revealDelayStyle(HERO_GALLERY_REVEAL_SLOTS.console.delayMs)}
+          >
+            <KonamiGameBoyWidget />
+          </div>
         </div>
 
         {/* 3D Procedural Stage & Telemetry */}
-        <div className="lg:col-span-5">
+        <div
+          className="lg:col-span-5 neo-gallery-item neo-gallery-item--monument"
+          style={revealDelayStyle(HERO_GALLERY_REVEAL_SLOTS.stage3d.delayMs)}
+        >
           <GustoCanvasStage
             assemblyProgress={viewState.assemblyProgress}
             isBooting={viewState.isBooting}

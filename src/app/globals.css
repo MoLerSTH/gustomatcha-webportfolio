@@ -387,6 +387,70 @@
   }
 }
 
+/* Gallery Exhibition Reveal — smooth post-door stagger over empty drafting canvas */
+@keyframes neo-gallery-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-y, 20px), 0) scale(var(--reveal-scale, 0.985));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.neo-gallery-item--monument {
+  --reveal-y: 26px;
+  --reveal-scale: 0.975;
+}
+
+.neo-navbar-reveal {
+  --reveal-y: -12px;
+  --reveal-scale: 1;
+}
+
+.neo-hero-reveal[data-reveal-phase='concealed'] .neo-gallery-item,
+:root[data-boot-stage='concealed'] .neo-navbar-reveal,
+:root[data-boot-stage='concealed'] main > section:not(:first-child),
+:root[data-boot-stage='concealed'] footer {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y, 20px), 0) scale(var(--reveal-scale, 0.985));
+  pointer-events: none;
+}
+
+.neo-hero-reveal[data-reveal-phase='revealing'] .neo-gallery-item {
+  will-change: opacity, transform;
+  animation: neo-gallery-enter 780ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms) both;
+}
+
+:root[data-boot-stage='revealing'] .neo-navbar-reveal {
+  will-change: opacity, transform;
+  animation: neo-gallery-enter 680ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+}
+
+:root[data-boot-stage='revealing'] main > section:nth-child(2) {
+  --reveal-y: 24px;
+  --reveal-scale: 0.99;
+  will-change: opacity, transform;
+  animation: neo-gallery-enter 780ms cubic-bezier(0.16, 1, 0.3, 1) 1300ms both;
+}
+
+:root[data-boot-stage='revealing'] main > section:nth-child(3) {
+  --reveal-y: 24px;
+  --reveal-scale: 0.99;
+  will-change: opacity, transform;
+  animation: neo-gallery-enter 780ms cubic-bezier(0.16, 1, 0.3, 1) 1420ms both;
+}
+
+:root[data-boot-stage='revealing'] main > section:nth-child(n + 4),
+:root[data-boot-stage='revealing'] footer {
+  --reveal-y: 24px;
+  --reveal-scale: 0.99;
+  will-change: opacity, transform;
+  animation: neo-gallery-enter 780ms cubic-bezier(0.16, 1, 0.3, 1) 1500ms both;
+}
+
 /* Phase 5: Overclock Synth-Dimension Deck Discrete Entry/Exit */
 .neo-overclock-deck {
   display: block;
@@ -954,6 +1018,21 @@ dialog.neo-dialog::backdrop {
   .neo-kinetic-hud {
     transform: none !important;
     transition: none !important;
+  }
+
+  .neo-gallery-item,
+  .neo-hero-reveal[data-reveal-phase='concealed'] .neo-gallery-item,
+  .neo-navbar-reveal,
+  :root[data-boot-stage='concealed'] .neo-navbar-reveal,
+  :root[data-boot-stage='concealed'] main > section:not(:first-child),
+  :root[data-boot-stage='concealed'] footer,
+  :root[data-boot-stage='revealing'] main > section:not(:first-child),
+  :root[data-boot-stage='revealing'] footer {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+    pointer-events: auto !important;
   }
 
   ::view-transition-group(*),
