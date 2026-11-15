@@ -137,6 +137,25 @@ export function computeAssemblyVisualState(
   };
 }
 
+export type StageCursorState = 'crosshair' | 'pointer';
+
+/**
+ * Synchronizes 3D stage cursor feedback via `data-cursor` instead of inline
+ * `style.cursor` so CSS theme tokens and High Contrast rules stay authoritative.
+ */
+export function applyContainerCursorState(
+  container: Partial<Pick<HTMLElement, 'dataset'>> | null | undefined,
+  state: StageCursorState | null
+): void {
+  const dataset = container?.dataset;
+  if (!dataset) return;
+  if (state === null) {
+    delete dataset.cursor;
+  } else {
+    dataset.cursor = state;
+  }
+}
+
 interface ContentVisibilityEvent extends Event {
   readonly skipped?: boolean;
 }
@@ -207,6 +226,7 @@ export class GustoWorldEngine {
   ) {
     this.container = container;
     this.callbacks = callbacks;
+    applyContainerCursorState(this.container, 'crosshair');
     this.setAssemblyProgress(options.initialAssemblyProgress ?? 1);
     this.quality = computeQualityProfile();
     this.coreClickDetector = new RapidClickDetector(5, 1800, () => {
@@ -471,9 +491,9 @@ export class GustoWorldEngine {
 
   private handlePointerLeave = (): void => {
     this.hasPointerInside = false;
+    applyContainerCursorState(this.container, 'crosshair');
     if (this.hoveredProjectId !== null) {
       this.hoveredProjectId = null;
-      this.container.style.cursor = 'default';
       this.callbacks.onHoverProject?.(null);
     }
   };
@@ -529,7 +549,7 @@ export class GustoWorldEngine {
       }
     }
 
-    this.container.style.cursor = isInteractiveHit ? 'pointer' : 'default';
+    applyContainerCursorState(this.container, isInteractiveHit ? 'pointer' : 'crosshair');
 
     if (nextHoveredId !== this.hoveredProjectId) {
       this.hoveredProjectId = nextHoveredId;
@@ -819,6 +839,7 @@ export class GustoWorldEngine {
     if (this.isDisposed) return;
     this.isDisposed = true;
     this.pause();
+    applyContainerCursorState(this.container, null);
 
     this.scrollTriggerInstance?.kill();
     this.scrollTriggerInstance = null;

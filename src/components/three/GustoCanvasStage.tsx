@@ -276,7 +276,7 @@ export function GustoCanvasStage({
       >
         {/* 3D WebGL Canvas Viewport with CSS Containment */}
         <div className="relative h-[380px] sm:h-[430px] w-full neo-stage-contain neo-grid-bg border-b-[3px] border-[var(--ui-border-color)] overflow-hidden">
-          <div ref={containerRef} className="h-full w-full" />
+          <div ref={containerRef} data-cursor="crosshair" className="h-full w-full" />
 
           {/* Top-Left Live Telemetry HUD */}
           <div className="pointer-events-none absolute top-3 left-3 flex flex-wrap items-center gap-2">

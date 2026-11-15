@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   GustoWorldEngine,
   RapidClickDetector,
+  applyContainerCursorState,
   computeScrollChoreographyState,
   computeAssemblyVisualState,
 } from '../GustoWorldEngine';
@@ -69,5 +70,31 @@ describe('GustoWorldEngine Pure Logic Helpers', () => {
       { initialAssemblyProgress: Number.NaN }
     );
     expect(clampedEngine.getAssemblyProgress()).toBe(0);
+  });
+
+  it('updates container dataset.cursor without mutating inline style.cursor and clears on null/dispose', () => {
+    const dataset: DOMStringMap = {};
+    const style = { cursor: '' };
+    const domContainer = { dataset, style } as unknown as HTMLElement;
+
+    const engine = new GustoWorldEngine(domContainer);
+    expect(domContainer.dataset.cursor).toBe('crosshair');
+    expect(domContainer.style.cursor).toBe('');
+
+    applyContainerCursorState(domContainer, 'pointer');
+    expect(domContainer.dataset.cursor).toBe('pointer');
+    expect(domContainer.style.cursor).toBe('');
+
+    applyContainerCursorState(domContainer, 'crosshair');
+    expect(domContainer.dataset.cursor).toBe('crosshair');
+
+    applyContainerCursorState(domContainer, 'pointer');
+    engine.dispose();
+    expect(domContainer.dataset.cursor).toBeUndefined();
+    expect(domContainer.style.cursor).toBe('');
+
+    expect(() => applyContainerCursorState(null, 'pointer')).not.toThrow();
+    expect(() => applyContainerCursorState(undefined, null)).not.toThrow();
+    expect(() => applyContainerCursorState({} as HTMLElement, 'crosshair')).not.toThrow();
   });
 });
