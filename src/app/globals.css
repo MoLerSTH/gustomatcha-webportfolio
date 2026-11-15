@@ -562,6 +562,194 @@ dialog.neo-dialog::backdrop {
   }
 }
 
+/* Konami Code Game Boy Console (GUSTO_BOY POCKET) */
+.neo-gameboy-shell {
+  background-color: #eaeae2;
+  color: var(--text-primary);
+  border: var(--ui-border-width) solid var(--ui-border-color);
+  box-shadow: var(--btn-shadow-rest);
+  border-end-end-radius: 1.5rem;
+}
+
+:root[data-theme='overclock'] .neo-gameboy-shell {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.neo-gameboy-bezel {
+  background-color: #181a1f;
+  color: #f8f9fa;
+  border: 2.5px solid var(--color-pitch-black);
+  border-end-end-radius: 1rem;
+}
+
+:root[data-theme='overclock'] .neo-gameboy-bezel {
+  background-color: #050b14;
+  border-color: var(--color-cyber-mint);
+}
+
+.neo-gameboy-lcd {
+  background-color: #9bbc0f;
+  background-image:
+    linear-gradient(to right, rgba(15, 56, 15, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 56, 15, 0.08) 1px, transparent 1px);
+  background-size: 4px 4px;
+  color: #0f380f;
+  border: 2.5px solid #0f380f;
+  box-shadow: inset 3px 3px 0px rgba(15, 56, 15, 0.22);
+}
+
+:root[data-theme='overclock'] .neo-gameboy-lcd {
+  background-color: #071a1d;
+  background-image:
+    linear-gradient(to right, rgba(0, 245, 212, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 245, 212, 0.08) 1px, transparent 1px);
+  color: #00f5d4;
+  border-color: var(--color-cyber-mint);
+  box-shadow: inset 3px 3px 0px rgba(0, 245, 212, 0.16);
+}
+
+.neo-gameboy-lcd[data-status='unlocked'] {
+  border-color: var(--color-electric-yellow);
+}
+
+:root[data-theme='overclock'] .neo-gameboy-lcd[data-status='unlocked'] {
+  border-color: var(--color-coral-pop);
+}
+
+.neo-dpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(2.25rem, 2.5rem));
+  grid-template-rows: repeat(3, minmax(2.25rem, 2.5rem));
+  gap: 2px;
+}
+
+.neo-dpad-pivot {
+  background-color: #1f2329;
+  border: 2px solid var(--color-pitch-black);
+}
+
+:root[data-theme='overclock'] .neo-dpad-pivot {
+  background-color: #0e223d;
+  border-color: var(--color-cyber-mint);
+}
+
+.neo-dpad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 2.25rem;
+  min-block-size: 2.25rem;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1;
+  background-color: #1f2329;
+  color: #ffffff;
+  border: 2.5px solid var(--color-pitch-black);
+  box-shadow: 3px 3px 0px var(--color-pitch-black);
+  transition:
+    background-color 80ms ease-out,
+    color 80ms ease-out,
+    box-shadow 80ms ease-out,
+    transform 80ms ease-out;
+}
+
+:root[data-theme='overclock'] .neo-dpad-btn {
+  background-color: #0e223d;
+  color: var(--color-cyber-mint);
+  border-color: var(--color-cyber-mint);
+  box-shadow: 3px 3px 0px var(--color-cyber-mint);
+}
+
+.neo-dpad-btn:is(:active, [data-active='true']) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--ui-shadow-color);
+  background-color: var(--color-electric-yellow);
+  color: var(--color-pitch-black);
+}
+
+.neo-ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1;
+  border: 2.5px solid var(--color-pitch-black);
+  box-shadow: 3px 3px 0px var(--ui-shadow-color);
+  transition:
+    background-color 80ms ease-out,
+    color 80ms ease-out,
+    box-shadow 80ms ease-out,
+    transform 80ms ease-out;
+}
+
+.neo-ab-btn[data-variant='b'] {
+  background-color: var(--color-coral-pop);
+  color: var(--color-pitch-black);
+}
+
+.neo-ab-btn[data-variant='a'] {
+  background-color: var(--color-electric-yellow);
+  color: var(--color-pitch-black);
+}
+
+:root[data-theme='overclock'] .neo-ab-btn {
+  border-color: var(--color-cyber-mint);
+}
+
+.neo-ab-btn:is(:active, [data-active='true']) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--ui-shadow-color);
+  background-color: var(--color-pitch-black);
+  color: var(--color-electric-yellow);
+}
+
+:root[data-theme='overclock'] .neo-ab-btn:is(:active, [data-active='true']) {
+  background-color: var(--color-cyber-mint);
+  color: var(--color-blueprint-navy);
+}
+
+.neo-reset-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.95rem;
+  min-block-size: 2rem;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  background-color: #363940;
+  color: #ffffff;
+  border: 2px solid var(--ui-border-color);
+  box-shadow: 2px 2px 0px var(--ui-shadow-color);
+  transform: rotate(-10deg);
+  transition:
+    background-color 80ms ease-out,
+    color 80ms ease-out,
+    box-shadow 80ms ease-out,
+    transform 80ms ease-out;
+}
+
+.neo-reset-pill:hover {
+  background-color: var(--color-electric-yellow);
+  color: var(--color-pitch-black);
+}
+
+.neo-reset-pill:active {
+  transform: rotate(-10deg) translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--ui-shadow-color);
+}
+
 /* Theme-matched inline SVG cursors on fine-pointer desktop devices (unlayered to outrank utilities) */
 @media (hover: hover) and (pointer: fine) {
   html,
@@ -642,9 +830,21 @@ dialog.neo-dialog::backdrop {
 }
 
 @media (pointer: coarse) {
+  .neo-toolbar-btn,
+  .neo-dpad-btn,
+  .neo-ab-btn {
+    min-block-size: 2.75rem;
+    min-inline-size: 2.75rem;
+  }
+
   .neo-toolbar-btn {
     min-block-size: 3rem;
     min-inline-size: 3rem;
+  }
+
+  .neo-reset-pill {
+    min-block-size: 2.75rem;
+    padding-inline: 1.1rem;
   }
 }
 
@@ -675,6 +875,16 @@ dialog.neo-dialog::backdrop {
     transition: none;
   }
 
+  .neo-dpad-btn,
+  .neo-dpad-btn:is(:active, [data-active='true']),
+  .neo-ab-btn,
+  .neo-ab-btn:is(:active, [data-active='true']),
+  .neo-reset-pill,
+  .neo-reset-pill:active {
+    transform: none;
+    transition: none;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
@@ -697,18 +907,28 @@ dialog.neo-dialog::backdrop {
   .neo-btn-tactile,
   .neo-border-b,
   .neo-toolbar-btn,
+  .neo-gameboy-shell,
+  .neo-gameboy-bezel,
+  .neo-gameboy-lcd,
   dialog.neo-dialog {
     border-color: CanvasText;
   }
 
   .neo-btn-tactile,
-  .neo-toolbar-btn {
+  .neo-toolbar-btn,
+  .neo-dpad-btn,
+  .neo-ab-btn,
+  .neo-reset-pill {
     border-color: ButtonText;
+    background-color: ButtonFace;
+    color: ButtonText;
   }
 
   .neo-toolbar-btn[aria-pressed='true'],
   .neo-filter-pill[aria-pressed='true'],
-  .neo-nav-link:is(:target-current, .target-current) {
+  .neo-nav-link:is(:target-current, .target-current),
+  .neo-dpad-btn[data-active='true'],
+  .neo-ab-btn[data-active='true'] {
     background-color: Highlight;
     color: HighlightText;
     border-color: Highlight;
