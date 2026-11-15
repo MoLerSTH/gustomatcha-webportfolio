@@ -36,6 +36,7 @@ export function ExperienceTimelineSection() {
   return (
     <section
       id="experience"
+      tabIndex={-1}
       aria-labelledby="heading-experience"
       className="neo-section-deferred scroll-mt-24 space-y-8"
     >

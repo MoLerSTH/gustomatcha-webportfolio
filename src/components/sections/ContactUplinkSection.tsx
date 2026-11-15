@@ -95,6 +95,7 @@ export function ContactUplinkSection() {
   return (
     <section
       id="contact"
+      tabIndex={-1}
       aria-labelledby="heading-contact"
       className="neo-section-deferred scroll-mt-24"
     >

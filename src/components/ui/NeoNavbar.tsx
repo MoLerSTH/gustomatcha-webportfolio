@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Menu, Volume2, VolumeX, Cpu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAudioSync } from '@/hooks/useAudioSync';
@@ -20,6 +20,53 @@ const DEFAULT_NAV_LINKS: NavLinkItem[] = [
   { label: 'CONTACT', href: '#contact' },
 ];
 
+/**
+ * Extracts a clean section ID from an in-page `#fragment` href while rejecting
+ * empty `#` hashes or external URLs.
+ */
+export function normalizeSectionHref(href: string): string | null {
+  if (!href.startsWith('#')) {
+    return null;
+  }
+  const id = href.slice(1).trim();
+  return id.length > 0 ? id : null;
+}
+
+/**
+ * Resolves the active navigation fragment href in navbar document order from
+ * currently visible section IDs, preserving `currentActiveHref` when between sections.
+ */
+export function resolveActiveSectionHref(
+  visibleSectionIds: readonly string[],
+  links: readonly NavLinkItem[],
+  currentActiveHref?: string | null,
+): string | null {
+  const visibleSet = new Set(visibleSectionIds);
+  for (const item of links) {
+    const id = normalizeSectionHref(item.href);
+    if (id && visibleSet.has(id)) {
+      return item.href;
+    }
+  }
+  if (currentActiveHref) {
+    return currentActiveHref;
+  }
+  return links[0]?.href ?? null;
+}
+
+const subscribeNoop = () => () => {};
+
+function useSupportsNativeScrollTarget(): boolean {
+  return useSyncExternalStore(
+    subscribeNoop,
+    () =>
+      typeof CSS !== 'undefined' &&
+      typeof CSS.supports === 'function' &&
+      CSS.supports('scroll-target-group: auto'),
+    () => false,
+  );
+}
+
 export interface NeoNavbarProps {
   links?: NavLinkItem[];
   audioSyncEnabled?: boolean;
@@ -30,7 +77,8 @@ export interface NeoNavbarProps {
 
 /**
  * Sticky Neo-Brutalist HUD Navbar with single <nav> landmark,
- * accessible mobile disclosure, and reactive Overclock preview switch.
+ * scrollspy active-link synchronization, accessible mobile disclosure,
+ * and reactive Overclock preview switch.
  */
 export function NeoNavbar({
   links = DEFAULT_NAV_LINKS,
@@ -42,6 +90,72 @@ export function NeoNavbar({
   const { audioEnabled: hookAudioSync, toggleAudioSync: toggleHookAudioSync } = useAudioSync();
   const { isOverclock: hookOverclock, toggleOverclock: toggleHookOverclock } = useBlueprintTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeHref, setActiveHref] = useState<string | null>(
+    () => links[0]?.href ?? null,
+  );
+  const supportsNativeScrollTarget = useSupportsNativeScrollTarget();
+
+  useEffect(() => {
+    if (supportsNativeScrollTarget) {
+      const handleScrollEnd = () => {
+        try {
+          const matched = document.querySelector<HTMLAnchorElement>(
+            '.neo-nav-scrollspy a:target-current',
+          );
+          const nextHref = matched?.getAttribute('href');
+          if (nextHref && normalizeSectionHref(nextHref)) {
+            setActiveHref(nextHref);
+          }
+        } catch {
+          // Ignore browsers whose selector engine rejects :target-current dynamically.
+        }
+      };
+
+      window.addEventListener('scrollend', handleScrollEnd, { passive: true });
+      window.addEventListener('hashchange', handleScrollEnd, { passive: true });
+      return () => {
+        window.removeEventListener('scrollend', handleScrollEnd);
+        window.removeEventListener('hashchange', handleScrollEnd);
+      };
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+
+    const visibleIds = new Set<string>();
+    const sections = links
+      .map((item) => normalizeSectionHref(item.href))
+      .filter((id): id is string => id !== null)
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (sections.length === 0) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            visibleIds.add(entry.target.id);
+          } else {
+            visibleIds.delete(entry.target.id);
+          }
+        }
+        setActiveHref((current) =>
+          resolveActiveSectionHref(Array.from(visibleIds), links, current),
+        );
+      },
+      { rootMargin: '-45% 0px -45% 0px' },
+    );
+
+    for (const section of sections) {
+      observer.observe(section);
+    }
+
+    return () => observer.disconnect();
+  }, [links, supportsNativeScrollTarget]);
 
   const isAudioSync = controlledAudioSync ?? hookAudioSync;
   const isOverclock = controlledOverclock ?? hookOverclock;
@@ -80,16 +194,25 @@ export function NeoNavbar({
         </div>
 
         {/* Desktop Primary Navigation */}
-        <nav aria-label="Primary" className="hidden lg:flex items-center gap-1.5">
-          {links.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="inline-flex min-h-11 items-center px-3 py-2 font-mono text-xs font-bold uppercase tracking-wider text-[var(--ink)] border-2 border-transparent hover:border-[var(--ui-border-color)] hover:bg-[#FFE600] hover:text-[#0A0A0A] transition-colors no-underline"
-            >
-              {item.label}
-            </a>
-          ))}
+        <nav aria-label="Primary" className="neo-nav-scrollspy hidden lg:flex items-center gap-1.5">
+          {links.map((item) => {
+            const isActive = activeHref === item.href;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'true' : undefined}
+                onClick={() => setActiveHref(item.href)}
+                className={cn(
+                  'neo-nav-link inline-flex min-h-11 items-center gap-2 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wider text-[var(--ink)] border-2 border-transparent hover:border-[var(--ui-border-color)] hover:bg-[#FFE600] hover:text-[#0A0A0A] transition-colors no-underline',
+                  !supportsNativeScrollTarget && isActive && 'target-current',
+                )}
+              >
+                <span aria-hidden="true" className="neo-nav-link-dot" />
+                <span>{item.label}</span>
+              </a>
+            );
+          })}
         </nav>
 
         {/* System Telemetry Actions */}
@@ -139,18 +262,31 @@ export function NeoNavbar({
           'border-t-[3px] border-[var(--ui-border-color)] bg-[var(--bg-surface)] px-4 py-4 lg:hidden'
         )}
       >
-        <nav aria-label="Mobile" className="flex flex-col gap-2">
-          {links.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className="inline-flex min-h-11 items-center justify-between border-2 border-[var(--ui-border-color)] bg-[var(--bg-canvas)] px-4 py-2 font-mono text-sm font-bold text-[var(--ink)] no-underline"
-            >
-              <span>{item.label}</span>
-              <span aria-hidden="true">-&gt;</span>
-            </a>
-          ))}
+        <nav aria-label="Mobile" className="neo-nav-scrollspy flex flex-col gap-2">
+          {links.map((item) => {
+            const isActive = activeHref === item.href;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'true' : undefined}
+                onClick={() => {
+                  setActiveHref(item.href);
+                  setMobileMenuOpen(false);
+                }}
+                className={cn(
+                  'neo-nav-link inline-flex min-h-11 items-center justify-between border-2 border-[var(--ui-border-color)] bg-[var(--bg-canvas)] px-4 py-2 font-mono text-sm font-bold text-[var(--ink)] no-underline',
+                  !supportsNativeScrollTarget && isActive && 'target-current',
+                )}
+              >
+                <span className="inline-flex items-center gap-2.5">
+                  <span aria-hidden="true" className="neo-nav-link-dot" />
+                  <span>{item.label}</span>
+                </span>
+                <span aria-hidden="true">-&gt;</span>
+              </a>
+            );
+          })}
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <NeoButton
               variant={isAudioSync ? 'mint' : 'white'}

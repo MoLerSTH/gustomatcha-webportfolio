@@ -33,6 +33,7 @@ export function TechStackMatrixSection() {
   return (
     <section
       id="stack"
+      tabIndex={-1}
       aria-labelledby="heading-stack"
       className="neo-section-deferred scroll-mt-24 space-y-8"
     >

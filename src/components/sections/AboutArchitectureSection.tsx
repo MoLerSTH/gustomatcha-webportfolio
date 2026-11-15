@@ -38,6 +38,7 @@ export function AboutArchitectureSection() {
   return (
     <section
       id="architecture"
+      tabIndex={-1}
       aria-labelledby="heading-architecture"
       className="scroll-mt-24 space-y-8"
     >

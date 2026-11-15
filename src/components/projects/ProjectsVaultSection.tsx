@@ -132,6 +132,7 @@ export function ProjectsVaultSection() {
   return (
     <section
       id="projects"
+      tabIndex={-1}
       aria-labelledby="heading-projects"
       className="neo-section-deferred scroll-mt-24 space-y-10"
     >
