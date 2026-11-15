@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Menu, Volume2, VolumeX, Cpu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAudioSync } from '@/hooks/useAudioSync';
 import { useBlueprintTheme } from '@/hooks/useBlueprintTheme';
 import { NeoBadge, NeoButton } from './NeoBrutalPrimitives';
 
@@ -38,11 +39,11 @@ export function NeoNavbar({
   overclockActive: controlledOverclock,
   onToggleOverclock,
 }: NeoNavbarProps) {
-  const [localAudioSync, setLocalAudioSync] = useState(false);
+  const { audioEnabled: hookAudioSync, toggleAudioSync: toggleHookAudioSync } = useAudioSync();
   const { isOverclock: hookOverclock, toggleOverclock: toggleHookOverclock } = useBlueprintTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isAudioSync = controlledAudioSync ?? localAudioSync;
+  const isAudioSync = controlledAudioSync ?? hookAudioSync;
   const isOverclock = controlledOverclock ?? hookOverclock;
 
   const handleAudioClick = () => {
@@ -50,7 +51,7 @@ export function NeoNavbar({
       onToggleAudioSync();
       return;
     }
-    setLocalAudioSync((prev) => !prev);
+    void toggleHookAudioSync();
   };
 
   const handleOverclockClick = () => {

@@ -1,4 +1,4 @@
-import { ArrowUpRight, Code2, Cpu, GraduationCap, Mail, Terminal } from 'lucide-react';
+import { ArrowUpRight, Code2, GraduationCap, Mail, Terminal } from 'lucide-react';
 import {
   EXPERIENCE_TIMELINE,
   FEATURED_PROJECTS,
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/NeoBrutalPrimitives';
 import { NeoNavbar } from '@/components/ui/NeoNavbar';
 import { Phase1PrimitiveLab } from '@/components/phase1/Phase1PrimitiveLab';
+import { GustoCanvasStage } from '@/components/three/GustoCanvasStage';
 
 export default function HomePage() {
   return (
@@ -82,43 +83,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 3D STAGE RESERVATION & TELEMETRY SPEC */}
+          {/* 3D PROCEDURAL STAGE & TELEMETRY */}
           <div className="lg:col-span-5">
-            <NeoCard
-              variant="white"
-              headerVariant="cobalt"
-              windowTitle="THREEJS_STAGE // PHASE_2_MOUNT_SLOT"
-              windowTag="60 FPS TARGET"
-            >
-              <div className="space-y-4">
-                <div className="neo-border neo-surface p-5 min-h-52 flex flex-col justify-between gap-4">
-                  <div className="flex items-center justify-between font-mono text-xs">
-                    <span className="font-bold">PROCEDURAL_CORE_PREVIEW</span>
-                    <NeoBadge variant="yellow">AWAITING PHASE 2</NeoBadge>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="size-12 border-[3px] border-[var(--ui-border-color)] bg-[#00F5D4] text-[#0A0A0A] flex items-center justify-center neo-shadow-sm shrink-0">
-                      <Cpu className="size-6" aria-hidden="true" />
-                    </div>
-                    <p className="font-mono text-xs sm:text-sm text-[var(--ink-muted)]">
-                      Decoupled Pure Three.js engine (`GustoWorldEngine`) + 3 clickable satellite project nodes + GSAP ScrollTrigger choreography mounts here in Phase 2.
-                    </p>
-                  </div>
-                </div>
-
-                <dl className="grid grid-cols-2 gap-2.5 font-mono text-xs">
-                  {GUSTO_PROFILE.telemetrySpecs.map((spec) => (
-                    <div
-                      key={spec.label}
-                      className="border-2 border-[var(--ui-border-color)] bg-[var(--bg-surface)] p-2.5"
-                    >
-                      <dt className="text-[var(--ink-muted)]">{spec.label}</dt>
-                      <dd className="mt-0.5 font-bold truncate">{spec.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </NeoCard>
+            <GustoCanvasStage />
           </div>
         </section>
 
