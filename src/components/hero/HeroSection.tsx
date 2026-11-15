@@ -63,7 +63,7 @@ function getClientAutoBootEligible(): boolean {
 
 /**
  * Interactive Phase 3 Hero Section pairing zero-delay SSR LCP typography
- * with a synchronized <= 3.0s `GUSTO_OS v2.6` terminal boot overlay and
+ * with a synchronized 5.0s `GUSTO_OS v2.6` terminal boot overlay and
  * procedural 3D wireframe-to-solid core assembly.
  */
 export function HeroSection(): JSX.Element {
@@ -98,7 +98,7 @@ export function HeroSection(): JSX.Element {
     }
   }, []);
 
-  // Drive <= 2200ms boot progression and lock synchronized 3D wireframe->solid timeline
+  // Drive 5000ms boot progression and lock synchronized 3D wireframe->solid timeline
   useEffect(() => {
     if (activeStage !== 'booting') return;
 

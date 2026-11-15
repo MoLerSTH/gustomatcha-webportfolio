@@ -7,6 +7,7 @@ import {
   KINETIC_SLAM_BEATS,
   TerminalBootOverlay,
   canTransitionDisplay,
+  computeEaseOutProgress01,
   computeKineticSlamFrame,
   formatBootTelemetryLine,
   resolveOverlayAttributes,
@@ -118,5 +119,27 @@ describe('TerminalBootOverlay helpers & discrete display probe', () => {
     const reducedBlock = css.slice(reducedIndex);
     expect(reducedBlock).toContain('.neo-kinetic-curtain');
     expect(reducedBlock).toContain('.neo-kinetic-shockwave');
+    expect(css).toMatch(/\.neo-boot-progress-fill\s*\{[^}]*ease-out/);
+  });
+
+  it('applies ease-out progression to the bottom progress bar across the 5s boot timeline', () => {
+    expect(computeEaseOutProgress01(Number.NaN)).toBe(0);
+    expect(computeEaseOutProgress01(-0.25)).toBe(0);
+    expect(computeEaseOutProgress01(0)).toBe(0);
+    expect(computeEaseOutProgress01(0.5)).toBe(0.75);
+    expect(computeEaseOutProgress01(1.4)).toBe(1);
+
+    const midState = computeBootSequenceState(2500, 5000);
+    const html = renderToStaticMarkup(
+      createElement(TerminalBootOverlay, {
+        state: midState,
+        isVisible: true,
+        isClosing: false,
+        onSkip: () => {},
+      })
+    );
+    expect(html).toContain('--boot-progress-01:0.75');
+    expect(html).toContain('3D_WIREFRAME_ASSEMBLY: 75%');
+    expect(html).toContain('SHADER_COMPILE // 50%');
   });
 });

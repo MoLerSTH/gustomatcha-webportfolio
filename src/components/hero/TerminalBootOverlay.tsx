@@ -141,14 +141,27 @@ function resolveKineticBeat(clampedProgress: number): KineticBeatSpec {
   return KINETIC_SLAM_BEATS[3];
 }
 
+function clampProgress01(progress01: number): number {
+  return Number.isFinite(progress01)
+    ? Math.min(1, Math.max(0, progress01))
+    : 0;
+}
+
+/**
+ * Applies a smooth quadratic ease-out curve (`1 - (1 - t)^2`) for the bottom
+ * progress indicator so it launches briskly and decelerates cleanly into 100%.
+ */
+export function computeEaseOutProgress01(progress01: number): number {
+  const clamped = clampProgress01(progress01);
+  return Number((1 - Math.pow(1 - clamped, 2)).toFixed(4));
+}
+
 /**
  * Pure deterministic calculator mapping normalized boot progress into
  * the active Kinetic Brutalist Slam beat, shockwave scale, and curtain split ratio.
  */
 export function computeKineticSlamFrame(progress01: number): KineticSlamState {
-  const clampedProgress = Number.isFinite(progress01)
-    ? Math.min(1, Math.max(0, progress01))
-    : 0;
+  const clampedProgress = clampProgress01(progress01);
   const activeBeat = resolveKineticBeat(clampedProgress);
   const finale01 =
     clampedProgress < 0.85 ? 0 : (clampedProgress - 0.85) / 0.15;
@@ -162,7 +175,7 @@ export function computeKineticSlamFrame(progress01: number): KineticSlamState {
 }
 
 /**
- * Strictly <= 3.0s `GUSTO_OS v2.6` Kinetic Brutalist Slam Intro synchronized with
+ * 5.0s `GUSTO_OS v2.6` Kinetic Brutalist Slam Intro synchronized with
  * the Pure Three.js wireframe-to-solid procedural sculpture assembly.
  */
 export function TerminalBootOverlay({
@@ -208,10 +221,12 @@ export function TerminalBootOverlay({
 
   const slam = computeKineticSlamFrame(state.progress01);
   const { activeBeat, shockwaveScale, curtainSplit01 } = slam;
+  const easedBar01 = computeEaseOutProgress01(slam.clampedProgress);
+  const easedBarPercent = Math.min(100, Math.max(0, Math.round(easedBar01 * 100)));
   const latestLog = state.visibleLogs[state.visibleLogs.length - 1];
 
   const overlayStyle = {
-    '--boot-progress-01': String(slam.clampedProgress),
+    '--boot-progress-01': String(easedBar01),
     '--kinetic-bg': activeBeat.bgHex,
     '--kinetic-ink': activeBeat.inkHex,
     '--kinetic-shockwave-scale': String(shockwaveScale),
@@ -333,7 +348,7 @@ export function TerminalBootOverlay({
               className="inline-flex items-center gap-1.5 text-[#00F5D4]"
             >
               <Cpu className="size-3.5" aria-hidden="true" />
-              <span>3D_WIREFRAME_ASSEMBLY: {state.progressPercent}%</span>
+              <span>3D_WIREFRAME_ASSEMBLY: {easedBarPercent}%</span>
             </label>
 
             <span className="inline-flex items-center gap-1.5 text-[#FFE600]">
@@ -345,7 +360,7 @@ export function TerminalBootOverlay({
           <progress
             id="gusto-boot-progress"
             max={100}
-            value={state.progressPercent}
+            value={easedBarPercent}
             className="visually-hidden"
           />
 

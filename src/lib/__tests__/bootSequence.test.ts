@@ -11,10 +11,12 @@ import {
 } from '../bootSequence';
 
 describe('bootSequence state machine & sessionStorage persistence', () => {
-  it('enforces a strict <= 3.0s (3000ms) total intro budget including exit transition', () => {
-    expect(BOOT_TOTAL_DURATION_MS + BOOT_EXIT_TRANSITION_MS).toBeLessThanOrEqual(3000);
+  it('enforces a 5.0s (5000ms) boot sequence budget with deterministic log timestamps', () => {
+    expect(BOOT_TOTAL_DURATION_MS).toBe(5000);
+    expect(BOOT_TOTAL_DURATION_MS + BOOT_EXIT_TRANSITION_MS).toBeLessThanOrEqual(5500);
     expect(BOOT_SESSION_STORAGE_KEY).toBe('gusto_os_booted_v26');
     expect(GUSTO_BOOT_LOGS.length).toBeGreaterThanOrEqual(6);
+    expect(GUSTO_BOOT_LOGS[GUSTO_BOOT_LOGS.length - 1]?.timestampLabel).toBe('4.75s');
   });
 
   it('clamps non-finite, negative, and over-budget timestamps into [0..1] progress', () => {

@@ -17,7 +17,7 @@ export default function HomePage() {
         tabIndex={-1}
         className="flex-1 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 space-y-20 scroll-mt-24"
       >
-        {/* PHASE 3: <= 3.0s TERMINAL INTRO & SYNCHRONIZED HERO */}
+        {/* PHASE 3: 5.0s TERMINAL INTRO & SYNCHRONIZED HERO */}
         <HeroSection />
 
         {/* SECTION 01: SYSTEM ARCHITECT DOSSIER & SEARCHABLE DESIGN LAB */}

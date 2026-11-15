@@ -1,7 +1,7 @@
 import type { AccentColor } from '@/data/portfolioData';
 
 export const BOOT_SESSION_STORAGE_KEY = 'gusto_os_booted_v26';
-export const BOOT_TOTAL_DURATION_MS = 2200;
+export const BOOT_TOTAL_DURATION_MS = 5000;
 export const BOOT_EXIT_TRANSITION_MS = 250;
 
 export type BootPhase =
@@ -33,7 +33,7 @@ export const GUSTO_BOOT_LOGS: BootLogStep[] = [
   {
     id: 'webgl-stage',
     threshold01: 0.18,
-    timestampLabel: '0.40s',
+    timestampLabel: '0.90s',
     subsystem: 'WEBGL_STAGE // PURE_THREEJS_GLSL',
     message: 'Allocating procedural icosahedron wireframe & cel-shader uniforms...',
     status: 'OK',
@@ -42,7 +42,7 @@ export const GUSTO_BOOT_LOGS: BootLogStep[] = [
   {
     id: 'node-gistda',
     threshold01: 0.38,
-    timestampLabel: '0.84s',
+    timestampLabel: '1.90s',
     subsystem: 'NODE_01 // GISTDA_THEOS_CALVAL',
     message: 'Binding THEOS-1/2 geospatial telemetry node (FastAPI + GDAL + PG)...',
     status: 'OK',
@@ -51,7 +51,7 @@ export const GUSTO_BOOT_LOGS: BootLogStep[] = [
   {
     id: 'node-kbtg',
     threshold01: 0.58,
-    timestampLabel: '1.28s',
+    timestampLabel: '2.90s',
     subsystem: 'NODE_02 // KBTG_RISK_ENGINE',
     message: 'Syncing K PLUS real-time anti-scam risk forensics node (iLoveKBTG)...',
     status: 'SYNC',
@@ -60,7 +60,7 @@ export const GUSTO_BOOT_LOGS: BootLogStep[] = [
   {
     id: 'node-assignier',
     threshold01: 0.78,
-    timestampLabel: '1.72s',
+    timestampLabel: '3.90s',
     subsystem: 'NODE_03 // ROPA2077_ASSIGNIER_AI',
     message: 'Calibrating Typhoon OCR + local Ollama grading node...',
     status: 'SYNC',
@@ -69,7 +69,7 @@ export const GUSTO_BOOT_LOGS: BootLogStep[] = [
   {
     id: 'system-lock',
     threshold01: 0.95,
-    timestampLabel: '2.10s',
+    timestampLabel: '4.75s',
     subsystem: 'SYSTEM_LOCK // 60FPS_NEO_BRUTAL_READY',
     message: 'Solidifying geometry shell. All interactive telemetry channels online.',
     status: 'READY',
@@ -156,7 +156,7 @@ function getDefaultSessionStorage(): Storage | null {
 
 /**
  * Checks whether the current browser session has already completed or skipped
- * the <= 3.0s intro sequence. Never throws in SSR or restricted storage contexts.
+ * the 5.0s intro sequence. Never throws in SSR or restricted storage contexts.
  */
 export function hasSessionBooted(
   storage: Pick<Storage, 'getItem'> | null = getDefaultSessionStorage()

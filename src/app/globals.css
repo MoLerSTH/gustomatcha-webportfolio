@@ -320,7 +320,7 @@
 .neo-boot-progress-fill {
   transform-origin: left center;
   transform: scaleX(var(--boot-progress-01, 0));
-  transition: transform 90ms linear;
+  transition: transform 160ms ease-out;
 }
 
 /* Branch 3: Kinetic Brutalist Slam // Overclock Burst */

@@ -53,7 +53,7 @@ export function shouldRestoreFocusToMainOnBootEnd({
 }
 
 /**
- * Determines whether initial client mount should auto-launch the <= 3.0s
+ * Determines whether initial client mount should auto-launch the 5.0s
  * terminal boot overlay. Bypasses repeat sessions and reduced-motion users.
  */
 export function shouldAutoStartBoot({
