@@ -1,0 +1,278 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ==========================================================================
+   TIER 1-4 DESIGN TOKENS: FRIENDLY NEO-BRUTALISM & OVERCLOCK DIMENSION
+   ========================================================================== */
+:root {
+  color-scheme: light;
+
+  /* Tier 1: Literal Brand Palette */
+  --color-pure-white: #ffffff;
+  --color-off-white: #f8f9fa;
+  --color-grid-gray: #e5e7eb;
+  --color-pitch-black: #0a0a0a;
+  --color-electric-yellow: #ffe600;
+  --color-cyber-mint: #00f5d4;
+  --color-coral-pop: #ff5d8f;
+  --color-cobalt-blue: #3a86ff;
+  --color-blueprint-navy: #050b14;
+  --color-blueprint-surface: #0a1628;
+
+  /* Tier 2: Semantic Tokens */
+  --bg-canvas: var(--color-pure-white);
+  --bg-surface: var(--color-off-white);
+  --grid-line: var(--color-grid-gray);
+  --ink: var(--color-pitch-black);
+  --ink-muted: #404040;
+  --focus-ring: var(--color-pitch-black);
+  --selection-bg: var(--color-electric-yellow);
+  --selection-ink: var(--color-pitch-black);
+
+  /* Tier 3: Neo-Brutalist Structural Tokens */
+  --ui-border-width: 3px;
+  --ui-border-color: var(--ink);
+  --ui-shadow-offset: 6px;
+  --ui-shadow-sm-offset: 4px;
+  --ui-shadow-lg-offset: 10px;
+  --ui-shadow-color: var(--ink);
+  --ui-grid-size: 32px;
+
+  /* Tier 4: Component Interaction Tokens */
+  --btn-shadow-rest: var(--ui-shadow-offset) var(--ui-shadow-offset) 0px var(--ui-shadow-color);
+  --btn-shadow-hover: 4px 4px 0px var(--ui-shadow-color);
+  --btn-shadow-active: 2px 2px 0px var(--ui-shadow-color);
+
+  accent-color: var(--color-cobalt-blue);
+  scrollbar-color: var(--ink) var(--bg-surface);
+}
+
+:root[data-theme='overclock'] {
+  color-scheme: dark;
+
+  --bg-canvas: var(--color-blueprint-navy);
+  --bg-surface: var(--color-blueprint-surface);
+  --grid-line: rgba(0, 245, 212, 0.18);
+  --ink: var(--color-cyber-mint);
+  --ink-muted: #a6fff1;
+  --focus-ring: var(--color-electric-yellow);
+  --selection-bg: var(--color-cyber-mint);
+  --selection-ink: var(--color-blueprint-navy);
+
+  --ui-border-color: var(--color-cyber-mint);
+  --ui-shadow-color: rgba(0, 245, 212, 0.72);
+
+  accent-color: var(--color-cyber-mint);
+  scrollbar-color: var(--color-cyber-mint) var(--color-blueprint-surface);
+}
+
+/* ==========================================================================
+   BASE LAYER (No global * resets; scoped element defaults)
+   ========================================================================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--bg-canvas);
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-ink);
+  }
+
+  :where(a:any-link, button, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+}
+
+/* ==========================================================================
+   COMPONENT & UTILITY LAYER
+   ========================================================================== */
+@layer components {
+  .neo-grid-bg {
+    background-color: var(--bg-canvas);
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: var(--ui-grid-size) var(--ui-grid-size);
+  }
+
+  .neo-surface {
+    background-color: var(--bg-surface);
+    color: var(--ink);
+  }
+
+  .neo-border {
+    border: var(--ui-border-width) solid var(--ui-border-color);
+  }
+
+  .neo-border-b {
+    border-block-end: var(--ui-border-width) solid var(--ui-border-color);
+  }
+
+  .neo-shadow {
+    box-shadow: var(--btn-shadow-rest);
+  }
+
+  .neo-shadow-sm {
+    box-shadow: var(--ui-shadow-sm-offset) var(--ui-shadow-sm-offset) 0px var(--ui-shadow-color);
+  }
+
+  .neo-shadow-lg {
+    box-shadow: var(--ui-shadow-lg-offset) var(--ui-shadow-lg-offset) 0px var(--ui-shadow-color);
+  }
+
+  /* Tactile Button Physics (WCAG 2.5.8 target size >= 44px & :not(:disabled)) */
+  .neo-btn-tactile {
+    min-block-size: 2.75rem;
+    min-inline-size: 2.75rem;
+    border: var(--ui-border-width) solid var(--ui-border-color);
+    box-shadow: var(--btn-shadow-rest);
+    transition: background-color 120ms ease-out, color 120ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .neo-btn-tactile {
+      transition:
+        transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 120ms ease-out,
+        color 120ms ease-out;
+    }
+
+    .neo-btn-tactile:hover:not(:disabled, [aria-disabled='true']) {
+      transform: translate(2px, 2px);
+      box-shadow: var(--btn-shadow-hover);
+    }
+
+    .neo-btn-tactile:active:not(:disabled, [aria-disabled='true']) {
+      transform: translate(4px, 4px);
+      box-shadow: var(--btn-shadow-active);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .neo-btn-tactile:hover:not(:disabled, [aria-disabled='true']) {
+      box-shadow: var(--btn-shadow-hover);
+    }
+
+    .neo-btn-tactile:active:not(:disabled, [aria-disabled='true']) {
+      box-shadow: var(--btn-shadow-active);
+    }
+  }
+
+  .neo-btn-tactile:is(:disabled, [aria-disabled='true']) {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: var(--btn-shadow-active);
+  }
+
+  .neo-card-interactive {
+    transition: box-shadow 160ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .neo-card-interactive {
+      transition:
+        transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .neo-card-interactive:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 8px 8px 0px var(--ui-shadow-color);
+    }
+  }
+
+  .neo-live-dot {
+    display: inline-block;
+    inline-size: 0.55rem;
+    block-size: 0.55rem;
+    border: 1.5px solid var(--color-pitch-black);
+    border-radius: 9999px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .neo-live-dot {
+      animation: neo-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  /* Accessible Visually Hidden & Skip Link Pattern */
+  .visually-hidden:where(:not(:focus-within, :active)) {
+    position: absolute !important;
+    clip-path: inset(50%) !important;
+    overflow: hidden !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .skip-link:focus-visible {
+    position: fixed;
+    inset-block-start: 1rem;
+    inset-inline-start: 1rem;
+    z-index: 100;
+    padding: 0.75rem 1.25rem;
+    background-color: var(--color-electric-yellow);
+    color: var(--color-pitch-black);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.875rem;
+    border: 3px solid var(--color-pitch-black);
+    box-shadow: 4px 4px 0px var(--color-pitch-black);
+  }
+}
+
+@keyframes neo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.88);
+  }
+}
+
+/* Windows High Contrast / Forced Colors Mode Support */
+@media (forced-colors: active) {
+  .neo-border,
+  .neo-btn-tactile,
+  .neo-border-b {
+    border-color: CanvasText;
+  }
+
+  .neo-btn-tactile {
+    border-color: ButtonText;
+  }
+
+  :where(a:any-link, button, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+  }
+}
