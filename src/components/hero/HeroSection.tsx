@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type JSX,
 } from 'react';
 import {
@@ -27,22 +28,37 @@ import { GustoCanvasStage } from '@/components/three/GustoCanvasStage';
 import { TerminalBootOverlay } from './TerminalBootOverlay';
 import {
   deriveHeroBootViewState,
+  resolveEffectiveBootStage,
   shouldAutoStartBoot,
+  shouldRestoreFocusToMainOnBootEnd,
   waitForOverlayExitAnimations,
   type HeroBootStage,
 } from './heroBootController';
 
 interface BootControllerState {
-  stage: HeroBootStage;
+  stageOverride: HeroBootStage | null;
   elapsedMs: number;
   runId: number;
 }
 
 const INITIAL_BOOT_CONTROLLER: BootControllerState = {
-  stage: 'idle',
+  stageOverride: null,
   elapsedMs: 0,
   runId: 0,
 };
+
+const subscribeNoop = () => () => {};
+const getServerAutoBootFallback = () => false;
+
+function getClientAutoBootEligible(): boolean {
+  const alreadyBooted = hasSessionBooted();
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  return shouldAutoStartBoot({ alreadyBooted, prefersReducedMotion });
+}
 
 /**
  * Interactive Phase 3 Hero Section pairing zero-delay SSR LCP typography
@@ -50,41 +66,40 @@ const INITIAL_BOOT_CONTROLLER: BootControllerState = {
  * procedural 3D wireframe-to-solid core assembly.
  */
 export function HeroSection(): JSX.Element {
+  const autoBootEligible = useSyncExternalStore(
+    subscribeNoop,
+    getClientAutoBootEligible,
+    getServerAutoBootFallback
+  );
   const [controller, setController] = useState<BootControllerState>(
     INITIAL_BOOT_CONTROLLER
   );
   const overlayRef = useRef<HTMLDivElement | null>(null);
 
-  // Schedule auto-boot asynchronously on first session visit (skip repeat visits & reduced motion)
-  useEffect(() => {
-    const alreadyBooted = hasSessionBooted(
-      typeof window !== 'undefined' ? window.sessionStorage : null
+  const activeStage = resolveEffectiveBootStage(
+    controller.stageOverride,
+    autoBootEligible
+  );
+
+  const restoreFocusToMainIfNeeded = useCallback((isUserSkip: boolean) => {
+    if (typeof document === 'undefined') return;
+
+    const overlayContainsActiveElement = Boolean(
+      overlayRef.current?.contains(document.activeElement)
     );
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (!shouldAutoStartBoot({ alreadyBooted, prefersReducedMotion })) {
-      return;
+    if (
+      shouldRestoreFocusToMainOnBootEnd({
+        isUserSkip,
+        overlayContainsActiveElement,
+      })
+    ) {
+      document.getElementById('main-content')?.focus({ preventScroll: true });
     }
-
-    const rafId = window.requestAnimationFrame(() => {
-      setController((prev) => ({
-        stage: 'booting',
-        elapsedMs: 0,
-        runId: prev.runId + 1,
-      }));
-    });
-
-    return () => {
-      window.cancelAnimationFrame(rafId);
-    };
   }, []);
 
   // Drive <= 2200ms boot progression and lock synchronized 3D wireframe->solid timeline
   useEffect(() => {
-    if (controller.stage !== 'booting') return;
+    if (activeStage !== 'booting') return;
 
     const activeRunId = controller.runId;
     let rafId = 0;
@@ -101,11 +116,13 @@ export function HeroSection(): JSX.Element {
       );
 
       if (elapsedMs >= BOOT_TOTAL_DURATION_MS) {
-        markSessionBooted(window.sessionStorage);
+        markSessionBooted();
+        restoreFocusToMainIfNeeded(false);
         setController((prev) =>
-          prev.runId === activeRunId && prev.stage === 'booting'
+          prev.runId === activeRunId &&
+          (prev.stageOverride === null || prev.stageOverride === 'booting')
             ? {
-                stage: 'closing',
+                stageOverride: 'closing',
                 elapsedMs: BOOT_TOTAL_DURATION_MS,
                 runId: prev.runId,
               }
@@ -115,7 +132,8 @@ export function HeroSection(): JSX.Element {
       }
 
       setController((prev) =>
-        prev.runId === activeRunId && prev.stage === 'booting'
+        prev.runId === activeRunId &&
+        (prev.stageOverride === null || prev.stageOverride === 'booting')
           ? { ...prev, elapsedMs }
           : prev
       );
@@ -127,11 +145,11 @@ export function HeroSection(): JSX.Element {
     return () => {
       window.cancelAnimationFrame(rafId);
     };
-  }, [controller.stage, controller.runId]);
+  }, [activeStage, controller.runId, restoreFocusToMainIfNeeded]);
 
   // Settle discrete @starting-style / [data-closing] exit transition before unmounting visibility
   useEffect(() => {
-    if (controller.stage !== 'closing') return;
+    if (activeStage !== 'closing') return;
 
     const activeRunId = controller.runId;
     let cancelled = false;
@@ -142,8 +160,8 @@ export function HeroSection(): JSX.Element {
     ).then(() => {
       if (cancelled) return;
       setController((prev) =>
-        prev.runId === activeRunId && prev.stage === 'closing'
-          ? { ...prev, stage: 'done' }
+        prev.runId === activeRunId && prev.stageOverride === 'closing'
+          ? { ...prev, stageOverride: 'done' }
           : prev
       );
     });
@@ -151,32 +169,29 @@ export function HeroSection(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [controller.stage, controller.runId]);
+  }, [activeStage, controller.runId]);
 
   const handleSkipBoot = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      markSessionBooted(window.sessionStorage);
-      // Move focus to primary landmark BEFORE overlay button transitions to display: none.
-      document.getElementById('main-content')?.focus({ preventScroll: true });
-    }
+    markSessionBooted();
+    restoreFocusToMainIfNeeded(true);
 
     setController((prev) =>
-      prev.stage === 'booting'
+      prev.stageOverride === null || prev.stageOverride === 'booting'
         ? {
-            stage: 'closing',
+            stageOverride: 'closing',
             elapsedMs: BOOT_TOTAL_DURATION_MS,
             runId: prev.runId + 1,
           }
         : prev
     );
-  }, []);
+  }, [restoreFocusToMainIfNeeded]);
 
   const handleReplayBoot = useCallback(() => {
     setController((prev) =>
-      prev.stage === 'booting' || prev.stage === 'closing'
+      prev.stageOverride === 'booting' || prev.stageOverride === 'closing'
         ? prev
         : {
-            stage: 'booting',
+            stageOverride: 'booting',
             elapsedMs: 0,
             runId: prev.runId + 1,
           }
@@ -184,8 +199,8 @@ export function HeroSection(): JSX.Element {
   }, []);
 
   const viewState = useMemo(
-    () => deriveHeroBootViewState(controller.stage, controller.elapsedMs),
-    [controller.stage, controller.elapsedMs]
+    () => deriveHeroBootViewState(activeStage, controller.elapsedMs),
+    [activeStage, controller.elapsedMs]
   );
 
   return (

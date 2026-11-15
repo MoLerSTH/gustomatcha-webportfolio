@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
+  GustoWorldEngine,
   RapidClickDetector,
   computeScrollChoreographyState,
   computeAssemblyVisualState,
@@ -48,5 +49,25 @@ describe('GustoWorldEngine Pure Logic Helpers', () => {
     expect(clampedLow).toEqual(rawWireframe);
     expect(clampedHigh).toEqual(fullyAssembled);
     expect(clampedNaN).toEqual(rawWireframe);
+  });
+
+  it('initializes assemblyProgress from constructor options before first render frame and clamps invalid inputs', () => {
+    const mockContainer = {} as HTMLElement;
+    const bootingEngine = new GustoWorldEngine(
+      mockContainer,
+      {},
+      { initialAssemblyProgress: 0 }
+    );
+    expect(bootingEngine.getAssemblyProgress()).toBe(0);
+
+    bootingEngine.setAssemblyProgress(0.65);
+    expect(bootingEngine.getAssemblyProgress()).toBeCloseTo(0.65, 4);
+
+    const clampedEngine = new GustoWorldEngine(
+      mockContainer,
+      {},
+      { initialAssemblyProgress: Number.NaN }
+    );
+    expect(clampedEngine.getAssemblyProgress()).toBe(0);
   });
 });

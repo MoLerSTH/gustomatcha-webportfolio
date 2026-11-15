@@ -24,6 +24,34 @@ export interface AnimatableElementLike {
   getAnimations?: () => Array<{ finished: Promise<unknown> }>;
 }
 
+export interface RestoreFocusOnBootEndInput {
+  isUserSkip: boolean;
+  overlayContainsActiveElement: boolean;
+}
+
+/**
+ * Resolves the active boot stage immediately on client render when an explicit
+ * runtime override (replay/closing/done) has not superseded initial eligibility.
+ */
+export function resolveEffectiveBootStage(
+  stageOverride: HeroBootStage | null,
+  autoBootEligible: boolean
+): HeroBootStage {
+  return stageOverride ?? (autoBootEligible ? 'booting' : 'idle');
+}
+
+/**
+ * Determines whether focus should move to `#main-content` before hiding the
+ * boot overlay (explicit Skip always moves focus; natural completion moves
+ * focus whenever keyboard/SR focus remained inside the dialog).
+ */
+export function shouldRestoreFocusToMainOnBootEnd({
+  isUserSkip,
+  overlayContainsActiveElement,
+}: RestoreFocusOnBootEndInput): boolean {
+  return isUserSkip || overlayContainsActiveElement;
+}
+
 /**
  * Determines whether initial client mount should auto-launch the <= 3.0s
  * terminal boot overlay. Bypasses repeat sessions and reduced-motion users.

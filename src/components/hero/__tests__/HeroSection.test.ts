@@ -5,7 +5,9 @@ import {
 } from '@/lib/bootSequence';
 import {
   deriveHeroBootViewState,
+  resolveEffectiveBootStage,
   shouldAutoStartBoot,
+  shouldRestoreFocusToMainOnBootEnd,
   waitForOverlayExitAnimations,
 } from '../heroBootController';
 
@@ -102,5 +104,36 @@ describe('heroBootController', () => {
     await expect(
       waitForOverlayExitAnimations(stalledElement, 20)
     ).resolves.toBeUndefined();
+  });
+
+  it('resolves effective boot stage without waiting for client effects on fresh sessions', () => {
+    expect(resolveEffectiveBootStage(null, false)).toBe('idle');
+    expect(resolveEffectiveBootStage(null, true)).toBe('booting');
+    expect(resolveEffectiveBootStage('closing', true)).toBe('closing');
+    expect(resolveEffectiveBootStage('done', false)).toBe('done');
+    expect(resolveEffectiveBootStage('booting', false)).toBe('booting');
+  });
+
+  it('restores focus to #main-content on user skip OR natural completion when focus stayed inside overlay', () => {
+    expect(
+      shouldRestoreFocusToMainOnBootEnd({
+        isUserSkip: true,
+        overlayContainsActiveElement: false,
+      })
+    ).toBe(true);
+
+    expect(
+      shouldRestoreFocusToMainOnBootEnd({
+        isUserSkip: false,
+        overlayContainsActiveElement: true,
+      })
+    ).toBe(true);
+
+    expect(
+      shouldRestoreFocusToMainOnBootEnd({
+        isUserSkip: false,
+        overlayContainsActiveElement: false,
+      })
+    ).toBe(false);
   });
 });

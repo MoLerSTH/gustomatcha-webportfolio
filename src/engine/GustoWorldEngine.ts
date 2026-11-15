@@ -50,6 +50,15 @@ export interface GustoEngineCallbacks {
   onTelemetryUpdate?: (telemetry: EngineTelemetrySnapshot) => void;
 }
 
+export interface GustoEngineOptions {
+  initialAssemblyProgress?: number;
+}
+
+function clampUnit(value: number): number {
+  const safe = Number.isFinite(value) ? value : 0;
+  return Math.max(0, Math.min(1, safe));
+}
+
 /**
  * Detects N rapid clicks within a rolling millisecond window (used for the
  * 5x central core click trigger that unlocks GUSTO_OVERCLOCK).
@@ -191,9 +200,14 @@ export class GustoWorldEngine {
   private selectedProjectId: string | null = 'gistda-calval';
   private hoveredProjectId: string | null = null;
 
-  public constructor(container: HTMLElement, callbacks: GustoEngineCallbacks = {}) {
+  public constructor(
+    container: HTMLElement,
+    callbacks: GustoEngineCallbacks = {},
+    options: GustoEngineOptions = {}
+  ) {
     this.container = container;
     this.callbacks = callbacks;
+    this.setAssemblyProgress(options.initialAssemblyProgress ?? 1);
     this.quality = computeQualityProfile();
     this.coreClickDetector = new RapidClickDetector(5, 1800, () => {
       this.triggerShockwave('#00F5D4');
@@ -738,9 +752,12 @@ export class GustoWorldEngine {
     }
   }
 
+  public getAssemblyProgress(): number {
+    return this.assemblyProgress;
+  }
+
   public setAssemblyProgress(progress01: number): void {
-    const safe = Number.isFinite(progress01) ? progress01 : 0;
-    this.assemblyProgress = Math.max(0, Math.min(1, safe));
+    this.assemblyProgress = clampUnit(progress01);
   }
 
   public setOverclockMode(enabled: boolean): void {
@@ -764,8 +781,7 @@ export class GustoWorldEngine {
   }
 
   public setAudioPulseLevel(level01: number): void {
-    const safe = Number.isFinite(level01) ? level01 : 0;
-    this.audioPulseLevel = Math.max(0, Math.min(1, safe));
+    this.audioPulseLevel = clampUnit(level01);
   }
 
   public triggerShockwave(accentHex?: string): void {

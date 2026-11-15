@@ -50,7 +50,8 @@ export function GustoCanvasStage({
 }: GustoCanvasStageProps = {}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<GustoWorldEngine | null>(null);
-  const prevAssemblyProgressRef = useRef(1);
+  const latestAssemblyProgressRef = useRef(1);
+  const prevAssemblyProgressRef = useRef<number | null>(null);
 
   const { isOverclock, toggleOverclock } = useBlueprintTheme();
   const { audioEnabled, toggleAudioSync, sampleAudio, triggerSynthNote } =
@@ -62,27 +63,54 @@ export function GustoCanvasStage({
   const [telemetry, setTelemetry] =
     useState<EngineTelemetrySnapshot>(INITIAL_TELEMETRY);
 
+  // Declared before engine mount so initial assemblyProgress (e.g. 0 during boot) is
+  // captured prior to GustoWorldEngine construction and kept synced before first rAF paint.
+  useEffect(() => {
+    latestAssemblyProgressRef.current = assemblyProgress;
+    const engine = engineRef.current;
+
+    if (engine) {
+      engine.setAssemblyProgress(assemblyProgress);
+
+      if (
+        prevAssemblyProgressRef.current !== null &&
+        prevAssemblyProgressRef.current < 1 &&
+        assemblyProgress >= 1
+      ) {
+        engine.triggerShockwave('#FFE600');
+      }
+    }
+
+    prevAssemblyProgressRef.current = assemblyProgress;
+  }, [assemblyProgress]);
+
   // Mount Pure Three.js Engine once via useRef and dispose deterministically on unmount
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const engine = new GustoWorldEngine(container, {
-      onSelectProject: (projectId) => {
-        setSelectedProjectId(projectId);
-        triggerSynthNote(329.63, 0.18);
+    const engine = new GustoWorldEngine(
+      container,
+      {
+        onSelectProject: (projectId) => {
+          setSelectedProjectId(projectId);
+          triggerSynthNote(329.63, 0.18);
+        },
+        onHoverProject: (projectId) => {
+          setHoveredProjectId(projectId);
+        },
+        onCoreRapidClick: () => {
+          toggleOverclock();
+          triggerSynthNote(523.25, 0.32);
+        },
+        onTelemetryUpdate: (snapshot) => {
+          setTelemetry(snapshot);
+        },
       },
-      onHoverProject: (projectId) => {
-        setHoveredProjectId(projectId);
-      },
-      onCoreRapidClick: () => {
-        toggleOverclock();
-        triggerSynthNote(523.25, 0.32);
-      },
-      onTelemetryUpdate: (snapshot) => {
-        setTelemetry(snapshot);
-      },
-    });
+      {
+        initialAssemblyProgress: latestAssemblyProgressRef.current,
+      }
+    );
 
     engineRef.current = engine;
 
@@ -96,19 +124,6 @@ export function GustoCanvasStage({
   useEffect(() => {
     engineRef.current?.setOverclockMode(isOverclock);
   }, [isOverclock]);
-
-  // Synchronize [0..1] boot assembly progress and fire completion shockwave
-  useEffect(() => {
-    const engine = engineRef.current;
-    if (!engine) return;
-
-    engine.setAssemblyProgress(assemblyProgress);
-
-    if (prevAssemblyProgressRef.current < 1 && assemblyProgress >= 1) {
-      engine.triggerShockwave('#FFE600');
-    }
-    prevAssemblyProgressRef.current = assemblyProgress;
-  }, [assemblyProgress]);
 
   // Feed Web Audio API frequency envelope into 3D engine only while active
   useEffect(() => {
