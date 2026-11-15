@@ -106,4 +106,25 @@ describe('overclockSynthController', () => {
       })
     ).toBeNull();
   });
+
+  it('suppresses Alt+O and 1-6 synth shortcuts while a modal dialog is open', () => {
+    expect(
+      resolveSynthShortcutAction({
+        key: '1',
+        isOverclockActive: true,
+        isEditableTarget: false,
+        isModalOpen: true,
+      })
+    ).toBeNull();
+
+    expect(
+      resolveSynthShortcutAction({
+        key: 'o',
+        altKey: true,
+        isOverclockActive: true,
+        isEditableTarget: false,
+        isModalOpen: true,
+      })
+    ).toBeNull();
+  });
 });

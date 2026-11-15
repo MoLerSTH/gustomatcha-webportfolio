@@ -235,11 +235,7 @@ export function ProjectsVaultSection() {
                   type="button"
                   aria-pressed={isSelected}
                   onClick={() => setCategoryFilter(category)}
-                  className={`neo-btn-tactile cursor-pointer px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider ${
-                    isSelected
-                      ? 'bg-[#0A0A0A] text-[#FFFFFF]'
-                      : 'bg-[var(--bg-canvas)] text-[var(--text-primary)]'
-                  }`}
+                  className="neo-btn-tactile neo-filter-pill cursor-pointer px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider"
                 >
                   {category} ({matchCount})
                 </button>

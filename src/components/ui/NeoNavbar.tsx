@@ -54,6 +54,25 @@ export function resolveActiveSectionHref(
   return links[0]?.href ?? null;
 }
 
+/**
+ * Resolves initial or hash-navigation active href when native `scroll-target-group`
+ * is supported, checking `:target-current` first and falling back to the URL hash.
+ */
+export function resolveInitialScrollspyHref(
+  links: readonly NavLinkItem[],
+  targetCurrentHref?: string | null,
+  hashHref?: string | null,
+): string | null {
+  const validHrefs = new Set(links.map((item) => item.href));
+  if (targetCurrentHref && validHrefs.has(targetCurrentHref)) {
+    return targetCurrentHref;
+  }
+  if (hashHref && validHrefs.has(hashHref)) {
+    return hashHref;
+  }
+  return links[0]?.href ?? null;
+}
+
 const subscribeNoop = () => () => {};
 
 function useSupportsNativeScrollTarget(): boolean {
@@ -97,25 +116,45 @@ export function NeoNavbar({
 
   useEffect(() => {
     if (supportsNativeScrollTarget) {
-      const handleScrollEnd = () => {
+      let isMounted = true;
+      const readTargetCurrentHref = (): string | null => {
         try {
           const matched = document.querySelector<HTMLAnchorElement>(
             '.neo-nav-scrollspy a:target-current',
           );
-          const nextHref = matched?.getAttribute('href');
-          if (nextHref && normalizeSectionHref(nextHref)) {
-            setActiveHref(nextHref);
-          }
+          return matched?.getAttribute('href') ?? null;
         } catch {
-          // Ignore browsers whose selector engine rejects :target-current dynamically.
+          return null;
         }
       };
 
+      const syncInitialOrHash = () => {
+        if (!isMounted) {
+          return;
+        }
+        setActiveHref(
+          resolveInitialScrollspyHref(
+            links,
+            readTargetCurrentHref(),
+            window.location.hash,
+          ),
+        );
+      };
+
+      const handleScrollEnd = () => {
+        const nextHref = readTargetCurrentHref();
+        if (nextHref && normalizeSectionHref(nextHref)) {
+          setActiveHref(nextHref);
+        }
+      };
+
+      queueMicrotask(syncInitialOrHash);
       window.addEventListener('scrollend', handleScrollEnd, { passive: true });
-      window.addEventListener('hashchange', handleScrollEnd, { passive: true });
+      window.addEventListener('hashchange', syncInitialOrHash, { passive: true });
       return () => {
+        isMounted = false;
         window.removeEventListener('scrollend', handleScrollEnd);
-        window.removeEventListener('hashchange', handleScrollEnd);
+        window.removeEventListener('hashchange', syncInitialOrHash);
       };
     }
 
@@ -220,6 +259,7 @@ export function NeoNavbar({
           <NeoButton
             variant={isAudioSync ? 'mint' : 'white'}
             size="sm"
+            aria-pressed={isAudioSync}
             onClick={handleAudioClick}
             leftIcon={isAudioSync ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
             className="hidden sm:inline-flex"
@@ -230,6 +270,7 @@ export function NeoNavbar({
           <NeoButton
             variant={isOverclock ? 'coral' : 'cobalt'}
             size="sm"
+            aria-pressed={isOverclock}
             onClick={handleOverclockClick}
             leftIcon={<Cpu className="size-4" />}
             className="hidden md:inline-flex"
@@ -291,6 +332,7 @@ export function NeoNavbar({
             <NeoButton
               variant={isAudioSync ? 'mint' : 'white'}
               size="sm"
+              aria-pressed={isAudioSync}
               onClick={handleAudioClick}
               leftIcon={
                 isAudioSync ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />
@@ -301,6 +343,7 @@ export function NeoNavbar({
             <NeoButton
               variant={isOverclock ? 'coral' : 'cobalt'}
               size="sm"
+              aria-pressed={isOverclock}
               onClick={handleOverclockClick}
               leftIcon={<Cpu className="size-4" />}
             >

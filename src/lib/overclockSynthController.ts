@@ -93,16 +93,17 @@ export interface SynthShortcutInput {
   metaKey?: boolean;
   isOverclockActive: boolean;
   isEditableTarget: boolean;
+  isModalOpen?: boolean;
 }
 
 /**
  * Resolves global keyboard shortcuts (`Alt+O` toggle and `1`–`6` synth pads
- * when Overclock is active) while safely ignoring editable inputs/textareas.
+ * when Overclock is active) while safely ignoring editable targets or open modal dialogs.
  */
 export function resolveSynthShortcutAction(
   input: SynthShortcutInput
 ): SynthShortcutAction | null {
-  if (input.isEditableTarget) {
+  if (input.isEditableTarget || input.isModalOpen) {
     return null;
   }
 

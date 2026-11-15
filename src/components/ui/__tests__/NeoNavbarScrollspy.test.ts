@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeSectionHref,
   resolveActiveSectionHref,
+  resolveInitialScrollspyHref,
   type NavLinkItem,
 } from '../NeoNavbar';
 
@@ -27,5 +28,17 @@ describe('NeoNavbar scrollspy helpers', () => {
     );
     expect(resolveActiveSectionHref([], LINKS, '#projects')).toBe('#projects');
     expect(resolveActiveSectionHref([], LINKS, null)).toBe('#architecture');
+  });
+
+  it('syncs initial native scrollspy href from :target-current match or valid URL hash', () => {
+    expect(resolveInitialScrollspyHref(LINKS, '#stack', '#projects')).toBe(
+      '#stack',
+    );
+    expect(resolveInitialScrollspyHref(LINKS, null, '#projects')).toBe(
+      '#projects',
+    );
+    expect(resolveInitialScrollspyHref(LINKS, null, '#unknown')).toBe(
+      '#architecture',
+    );
   });
 });

@@ -12,7 +12,11 @@ export default function HomePage() {
     <>
       <NeoNavbar />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 space-y-20">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 space-y-20 scroll-mt-24"
+      >
         {/* PHASE 3: <= 3.0s TERMINAL INTRO & SYNCHRONIZED HERO */}
         <HeroSection />
 

@@ -56,11 +56,7 @@ export function TechStackMatrixSection() {
             type="button"
             aria-pressed={!coreOnly}
             onClick={() => setCoreOnly(false)}
-            className={`neo-btn-tactile cursor-pointer px-3.5 py-2 font-mono text-xs font-bold uppercase tracking-wider ${
-              !coreOnly
-                ? 'bg-[#0A0A0A] text-[#FFFFFF]'
-                : 'bg-[var(--bg-surface)] text-[var(--text-primary)]'
-            }`}
+            className="neo-btn-tactile neo-filter-pill cursor-pointer px-3.5 py-2 font-mono text-xs font-bold uppercase tracking-wider"
           >
             ALL MODULES
           </button>
@@ -68,11 +64,7 @@ export function TechStackMatrixSection() {
             type="button"
             aria-pressed={coreOnly}
             onClick={() => setCoreOnly(true)}
-            className={`neo-btn-tactile cursor-pointer px-3.5 py-2 font-mono text-xs font-bold uppercase tracking-wider ${
-              coreOnly
-                ? 'bg-[#0A0A0A] text-[#FFFFFF]'
-                : 'bg-[var(--bg-surface)] text-[var(--text-primary)]'
-            }`}
+            className="neo-btn-tactile neo-filter-pill cursor-pointer px-3.5 py-2 font-mono text-xs font-bold uppercase tracking-wider"
           >
             CORE ONLY
           </button>

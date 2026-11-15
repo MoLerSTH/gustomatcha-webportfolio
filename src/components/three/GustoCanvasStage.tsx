@@ -99,12 +99,16 @@ export function GustoCanvasStage({
           targetEl.tagName === 'TEXTAREA' ||
           targetEl.tagName === 'SELECT' ||
           targetEl.isContentEditable);
+      const isModalOpen =
+        typeof document !== 'undefined' &&
+        document.querySelector('dialog[open]') !== null;
       const action = resolveSynthShortcutAction({
         key: event.key,
         altKey: event.altKey,
         ctrlKey: event.ctrlKey,
         metaKey: event.metaKey,
         isEditableTarget,
+        isModalOpen,
         isOverclockActive: isOverclock,
       });
 

@@ -63,11 +63,7 @@ export function ExperienceTimelineSection() {
               type="button"
               aria-pressed={isSelected}
               onClick={() => setActiveTrack(track)}
-              className={`neo-btn-tactile cursor-pointer px-3.5 py-2 font-mono text-xs font-bold uppercase tracking-wider ${
-                isSelected
-                  ? 'bg-[#0A0A0A] text-[#FFFFFF]'
-                  : 'bg-[var(--bg-surface)] text-[var(--text-primary)]'
-              }`}
+              className="neo-btn-tactile neo-filter-pill cursor-pointer px-3.5 py-2 font-mono text-xs font-bold uppercase tracking-wider"
             >
               {track} ({count})
             </button>
