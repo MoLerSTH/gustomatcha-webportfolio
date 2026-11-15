@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Activity,
   ArrowUpRight,
@@ -20,6 +20,10 @@ import { SATELLITE_NODE_SPECS } from '@/engine/proceduralShaders';
 import { useAudioSync } from '@/hooks/useAudioSync';
 import { useBlueprintTheme } from '@/hooks/useBlueprintTheme';
 import { NeoBadge, NeoButton, NeoCard } from '@/components/ui/NeoBrutalPrimitives';
+import {
+  dispatchInspectProject,
+  GUSTO_FOCUS_3D_NODE_EVENT,
+} from '@/components/projects/ProjectsVaultSection';
 
 const INITIAL_TELEMETRY: EngineTelemetrySnapshot = {
   fps: 60,
@@ -149,11 +153,35 @@ export function GustoCanvasStage({
     };
   }, [audioEnabled, sampleAudio]);
 
-  const handleSelectNode = (projectId: string) => {
-    setSelectedProjectId(projectId);
-    engineRef.current?.focusProjectNode(projectId);
-    triggerSynthNote(293.66, 0.16);
-  };
+  const handleSelectNode = useCallback(
+    (projectId: string) => {
+      setSelectedProjectId(projectId);
+      engineRef.current?.focusProjectNode(projectId);
+      triggerSynthNote(293.66, 0.16);
+    },
+    [triggerSynthNote]
+  );
+
+  useEffect(() => {
+    const handleExternalFocus = (event: Event) => {
+      const detail = (event as CustomEvent<{ projectId?: string }>).detail;
+      const projectId = detail?.projectId;
+      if (
+        projectId &&
+        FEATURED_PROJECTS.some((project) => project.id === projectId)
+      ) {
+        handleSelectNode(projectId);
+      }
+    };
+
+    window.addEventListener(GUSTO_FOCUS_3D_NODE_EVENT, handleExternalFocus);
+    return () => {
+      window.removeEventListener(
+        GUSTO_FOCUS_3D_NODE_EVENT,
+        handleExternalFocus
+      );
+    };
+  }, [handleSelectNode]);
 
   const activeProject: ProjectItem =
     FEATURED_PROJECTS.find((p) => p.id === selectedProjectId) ??
@@ -324,9 +352,10 @@ export function GustoCanvasStage({
                 ))}
               </div>
               <NeoButton
-                href="#projects"
+                type="button"
                 variant={activeProject.accent}
                 size="sm"
+                onClick={() => dispatchInspectProject(activeProject.id)}
                 rightIcon={<ArrowUpRight className="size-3.5" />}
               >
                 INSPECT CARD
