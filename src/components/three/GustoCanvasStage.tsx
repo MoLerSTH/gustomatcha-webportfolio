@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Activity,
   ArrowUpRight,
+  Cpu,
   Orbit,
   Radio,
   RotateCcw,
@@ -19,7 +20,15 @@ import {
 import { SATELLITE_NODE_SPECS } from '@/engine/proceduralShaders';
 import { useAudioSync } from '@/hooks/useAudioSync';
 import { useBlueprintTheme } from '@/hooks/useBlueprintTheme';
+import {
+  computeSynthFrequency,
+  resolveSynthShortcutAction,
+  type SynthOctaveShift,
+  type SynthPadSpec,
+  type SynthWaveform,
+} from '@/lib/overclockSynthController';
 import { NeoBadge, NeoButton, NeoCard } from '@/components/ui/NeoBrutalPrimitives';
+import { OverclockSynthDeck } from '@/components/three/OverclockSynthDeck';
 import {
   dispatchInspectProject,
   GUSTO_FOCUS_3D_NODE_EVENT,
@@ -57,9 +66,70 @@ export function GustoCanvasStage({
   const latestAssemblyProgressRef = useRef(1);
   const prevAssemblyProgressRef = useRef<number | null>(null);
 
-  const { isOverclock, toggleOverclock } = useBlueprintTheme();
+  const { isOverclock, setOverclock, toggleOverclock } = useBlueprintTheme();
   const { audioEnabled, toggleAudioSync, sampleAudio, triggerSynthNote } =
     useAudioSync();
+  const synthConfigRef = useRef<{
+    waveform: SynthWaveform;
+    octaveShift: SynthOctaveShift;
+  }>({ waveform: 'sawtooth', octaveShift: 0 });
+
+  const handleTriggerSynthPad = useCallback(
+    (pad: SynthPadSpec, freqHz: number, waveform: SynthWaveform) => {
+      engineRef.current?.triggerShockwave(pad.colorHex);
+      triggerSynthNote(freqHz, 0.28, waveform);
+    },
+    [triggerSynthNote],
+  );
+
+  const handleSynthSettingsChange = useCallback(
+    (waveform: SynthWaveform, octaveShift: SynthOctaveShift) => {
+      synthConfigRef.current = { waveform, octaveShift };
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const handleWindowKeyDown = (event: KeyboardEvent) => {
+      const targetEl =
+        event.target instanceof HTMLElement ? event.target : null;
+      const isEditableTarget =
+        targetEl !== null &&
+        (targetEl.tagName === 'INPUT' ||
+          targetEl.tagName === 'TEXTAREA' ||
+          targetEl.tagName === 'SELECT' ||
+          targetEl.isContentEditable);
+      const action = resolveSynthShortcutAction({
+        key: event.key,
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        isEditableTarget,
+        isOverclockActive: isOverclock,
+      });
+
+      if (!action) {
+        return;
+      }
+
+      if (action.type === 'toggle-overclock') {
+        event.preventDefault();
+        toggleOverclock();
+        return;
+      }
+
+      if (action.type === 'trigger-pad') {
+        const { waveform, octaveShift } = synthConfigRef.current;
+        const freqHz = computeSynthFrequency(action.pad.baseFreqHz, octaveShift);
+        handleTriggerSynthPad(action.pad, freqHz, waveform);
+      }
+    };
+
+    window.addEventListener('keydown', handleWindowKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleWindowKeyDown);
+    };
+  }, [handleTriggerSynthPad, isOverclock, toggleOverclock]);
 
   const [selectedProjectId, setSelectedProjectId] =
     useState<string>('gistda-calval');
@@ -220,8 +290,18 @@ export function GustoCanvasStage({
             </NeoBadge>
           </div>
 
-          {/* Top-Right Interactive Audio & Shockwave Controls */}
+          {/* Top-Right Interactive Audio, Overclock & Shockwave Controls */}
           <div className="absolute top-3 right-3 flex flex-wrap items-center gap-2">
+            <NeoButton
+              type="button"
+              variant={isOverclock ? 'yellow' : 'white'}
+              size="sm"
+              aria-pressed={isOverclock}
+              onClick={toggleOverclock}
+              leftIcon={<Cpu className="size-3.5" />}
+            >
+              [OVERCLOCK: {isOverclock ? 'ON' : 'OFF'}]
+            </NeoButton>
             <NeoButton
               variant={audioEnabled ? 'mint' : 'white'}
               size="sm"
@@ -363,6 +443,13 @@ export function GustoCanvasStage({
             </div>
           </div>
         </div>
+
+        <OverclockSynthDeck
+          isOpen={isOverclock}
+          onTriggerPad={handleTriggerSynthPad}
+          onExitOverclock={() => setOverclock(false)}
+          onSettingsChange={handleSynthSettingsChange}
+        />
       </NeoCard>
     </div>
   );
