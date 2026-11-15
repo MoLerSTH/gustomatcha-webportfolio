@@ -263,6 +263,65 @@
   }
 }
 
+/* Top-level discrete entry/exit rules for GUSTO_OS Boot Overlay */
+.neo-boot-overlay {
+  display: flex;
+  contain: layout style paint;
+  opacity: 1;
+  translate: 0;
+  transition:
+    display,
+    opacity ease-out,
+    translate ease-out;
+  transition-duration: 240ms;
+  /* Separate declaration so browsers without allow-discrete don't drop the whole transition */
+  transition-behavior: allow-discrete;
+}
+
+@starting-style {
+  .neo-boot-overlay {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+
+.neo-boot-overlay:where([hidden], [data-closing]) {
+  opacity: 0;
+  translate: 0 -12px;
+  pointer-events: none;
+}
+
+.neo-boot-overlay[hidden] {
+  display: none;
+}
+
+.neo-boot-progress-fill {
+  transform-origin: left center;
+  transform: scaleX(var(--boot-progress-01, 0));
+  transition: transform 90ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neo-boot-overlay {
+    translate: none;
+    transition-duration: 80ms;
+  }
+
+  @starting-style {
+    .neo-boot-overlay {
+      translate: none;
+    }
+  }
+
+  .neo-boot-overlay:where([hidden], [data-closing]) {
+    translate: none;
+  }
+
+  .neo-boot-progress-fill {
+    transition-duration: 0ms;
+  }
+}
+
 /* Windows High Contrast / Forced Colors Mode Support */
 @media (forced-colors: active) {
   .neo-border,
