@@ -290,11 +290,9 @@
   contain: layout style paint;
   margin: 0;
   opacity: 1;
-  translate: 0;
   transition:
     display,
-    opacity ease-out,
-    translate ease-out;
+    opacity ease-out;
   transition-duration: 240ms;
   /* Separate declaration so browsers without allow-discrete don't drop the whole transition */
   transition-behavior: allow-discrete;
@@ -303,13 +301,11 @@
 @starting-style {
   .neo-boot-overlay {
     opacity: 0;
-    translate: 0 12px;
   }
 }
 
 .neo-boot-overlay:where([hidden], [data-closing]) {
   opacity: 0;
-  translate: 0 -12px;
   pointer-events: none;
 }
 
@@ -323,66 +319,45 @@
   transition: transform 160ms ease-out;
 }
 
-/* Branch 3: Kinetic Brutalist Slam // Overclock Burst */
-.neo-kinetic-curtain {
-  background-color: var(--kinetic-bg, #ffe600);
-  background-image: radial-gradient(rgba(10, 10, 10, 0.14) 1px, transparent 1px);
-  background-size: 16px 16px;
+/* Branch 3: Kinetic Brutalist Slam // Pixel Shatter Dissolve */
+.neo-kinetic-pixel {
+  border: 1px solid transparent;
+  transition: none;
+}
+
+.neo-boot-overlay[data-closing] .neo-kinetic-pixel {
   transition:
-    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 140ms ease-out;
-  will-change: transform;
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 220ms ease-out;
 }
 
-.neo-boot-overlay[data-beat-index='3'] .neo-kinetic-curtain {
-  background-image:
-    linear-gradient(to right, rgba(0, 245, 212, 0.14) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 245, 212, 0.14) 1px, transparent 1px);
-  background-size: 28px 28px;
+.neo-kinetic-hud {
+  transition: none;
 }
 
-.neo-kinetic-curtain-left {
-  transform: translate3d(calc(var(--kinetic-split-01, 0) * -28vw), 0, 0);
-}
-
-.neo-kinetic-curtain-right {
-  transform: translate3d(calc(var(--kinetic-split-01, 0) * 28vw), 0, 0);
-}
-
-.neo-boot-overlay[data-splitting='true'] .neo-kinetic-curtain-left {
-  border-right: 3px solid #0a0a0a;
-}
-
-.neo-boot-overlay[data-splitting='true'] .neo-kinetic-curtain-right {
-  border-left: 3px solid #0a0a0a;
-}
-
-.neo-boot-overlay:where([hidden], [data-closing]) .neo-kinetic-curtain-left {
-  transform: translate3d(-100%, 0, 0);
-}
-
-.neo-boot-overlay:where([hidden], [data-closing]) .neo-kinetic-curtain-right {
-  transform: translate3d(100%, 0, 0);
+.neo-boot-overlay[data-closing] .neo-kinetic-hud {
+  transition:
+    transform 200ms ease-out,
+    opacity 180ms ease-out;
 }
 
 .neo-kinetic-shockwave {
-  opacity: var(--kinetic-split-01, 0);
+  opacity: var(--kinetic-shockwave-opacity, 0);
   box-shadow: 0 0 0 3px #ffe600;
   transform: scale(var(--kinetic-shockwave-scale, 1));
-  transition:
-    transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 140ms ease-out;
-  will-change: transform, opacity;
+  transition: none;
 }
 
-.neo-boot-overlay:where([hidden], [data-closing]) .neo-kinetic-shockwave {
+.neo-boot-overlay[data-closing] .neo-kinetic-shockwave {
   opacity: 0;
-  transform: scale(3.8);
+  transform: scale(3.6);
+  transition:
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 200ms ease-out;
 }
 
 .neo-kinetic-poster {
-  transform: scale(calc(1 + var(--kinetic-split-01, 0) * 0.06));
-  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: none;
 }
 
 .neo-kinetic-word {
@@ -973,16 +948,12 @@ dialog.neo-dialog::backdrop {
     transition: none;
   }
 
-  .neo-kinetic-curtain,
-  .neo-kinetic-curtain-left,
-  .neo-kinetic-curtain-right,
-  .neo-boot-overlay:where([hidden], [data-closing]) .neo-kinetic-curtain-left,
-  .neo-boot-overlay:where([hidden], [data-closing]) .neo-kinetic-curtain-right,
+  .neo-kinetic-pixel,
   .neo-kinetic-shockwave,
-  .neo-boot-overlay:where([hidden], [data-closing]) .neo-kinetic-shockwave,
-  .neo-kinetic-poster {
-    transform: none;
-    transition: none;
+  .neo-kinetic-poster,
+  .neo-kinetic-hud {
+    transform: none !important;
+    transition: none !important;
   }
 
   ::view-transition-group(*),
@@ -1014,9 +985,8 @@ dialog.neo-dialog::backdrop {
     border-color: CanvasText;
   }
 
-  .neo-kinetic-curtain {
+  .neo-kinetic-pixel {
     background-color: Canvas;
-    background-image: none;
     border-color: CanvasText;
   }
 

@@ -88,11 +88,36 @@ export interface KineticBeatSpec {
   accentBadge: string;
 }
 
+export const PIXEL_SHATTER_COLS = 8;
+export const PIXEL_SHATTER_ROWS = 6;
+
+const SHATTER_START_01 = 0.84;
+const SHATTER_STAGGER_01 = 0.06;
+const SHATTER_TILE_SPAN_01 = 0.095;
+
+export interface KineticPixelTile {
+  index: number;
+  row: number;
+  col: number;
+  threshold01: number;
+  offsetXpx: number;
+  offsetYpx: number;
+  rotateDeg: number;
+  scale: number;
+  opacity: number;
+  isCracking: boolean;
+}
+
 export interface KineticSlamState {
   clampedProgress: number;
   activeBeat: KineticBeatSpec;
   shockwaveScale: number;
-  curtainSplit01: number;
+  shockwaveOpacity: number;
+  shatterProgress01: number;
+  hudOpacity: number;
+  canvasTiles: KineticPixelTile[];
+  topBarTiles: KineticPixelTile[];
+  bottomBarTiles: KineticPixelTile[];
 }
 
 /**
@@ -156,27 +181,130 @@ export function computeEaseOutProgress01(progress01: number): number {
   return Number((1 - Math.pow(1 - clamped, 2)).toFixed(4));
 }
 
+function buildShatterBand(options: {
+  rows: number;
+  cols: number;
+  bandBiasY: number;
+  seedOffset: number;
+  clampedProgress: number;
+  forceBandY?: number;
+}): KineticPixelTile[] {
+  const { rows, cols, bandBiasY, seedOffset, clampedProgress, forceBandY } = options;
+  const maxDist = Math.hypot(0.5, 0.5);
+  const tiles: KineticPixelTile[] = [];
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const index = row * cols + col;
+      const nx = (col + 0.5) / cols - 0.5;
+      const ny = forceBandY ?? (row + 0.5) / rows - 0.5;
+
+      // Deterministic integer hashes keep SSR markup identical to client hydration.
+      const hashA = ((index * 73 + row * 37 + col * 19 + seedOffset * 53) % 97) / 96;
+      const hashB = ((index * 41 + row * 61 + col * 83 + seedOffset * 29) % 89) / 88;
+      const dist01 = Math.min(1, Math.hypot(nx, ny) / maxDist);
+
+      const threshold01 = Number(
+        (SHATTER_START_01 + dist01 * (SHATTER_STAGGER_01 * 0.72) + hashA * (SHATTER_STAGGER_01 * 0.28)).toFixed(4)
+      );
+      const localU = clampProgress01((clampedProgress - threshold01) / SHATTER_TILE_SPAN_01);
+      const moveEase = 1 - Math.pow(1 - localU, 3);
+      const opacity =
+        localU <= 0 ? 1 : localU >= 1 ? 0 : Number((1 - Math.pow(localU, 1.35)).toFixed(3));
+
+      const offsetXpx = Number(((nx * 240 + (hashA - 0.5) * 64) * moveEase).toFixed(2));
+      const offsetYpx = Number(((ny * 180 + bandBiasY + (hashB - 0.5) * 40) * moveEase).toFixed(2));
+      const rotateDeg = Number(((nx * 42 + (hashB - 0.5) * 28) * moveEase).toFixed(2));
+      const scale = Number((1.02 - 0.84 * moveEase).toFixed(3));
+
+      tiles.push({
+        index,
+        row,
+        col,
+        threshold01,
+        offsetXpx,
+        offsetYpx,
+        rotateDeg,
+        scale,
+        opacity,
+        isCracking: localU > 0 && localU < 1,
+      });
+    }
+  }
+
+  return tiles;
+}
+
 /**
  * Pure deterministic calculator mapping normalized boot progress into
- * the active Kinetic Brutalist Slam beat, shockwave scale, and curtain split ratio.
+ * the active Kinetic Brutalist Slam beat, shockwave ring, and full-viewport
+ * pixel shatter + top/bottom bar scatter physics.
  */
 export function computeKineticSlamFrame(progress01: number): KineticSlamState {
   const clampedProgress = clampProgress01(progress01);
   const activeBeat = resolveKineticBeat(clampedProgress);
-  const finale01 =
-    clampedProgress < 0.85 ? 0 : (clampedProgress - 0.85) / 0.15;
+
+  const shockU = clampProgress01((clampedProgress - 0.82) / 0.14);
+  const shockEase = 1 - Math.pow(1 - shockU, 3);
+  const shockwaveScale = Number((1 + shockEase * 2.4).toFixed(3));
+  const shockwaveOpacity =
+    clampedProgress < 0.82 ? 0 : Number(((1 - shockU) * 0.9).toFixed(3));
+
+  const shatterProgress01 = Number(
+    clampProgress01((clampedProgress - SHATTER_START_01) / (1 - SHATTER_START_01)).toFixed(3)
+  );
+  const hudFadeU = clampProgress01((clampedProgress - SHATTER_START_01) / 0.085);
+  const hudOpacity = Number(Math.pow(1 - hudFadeU, 3).toFixed(3));
 
   return {
     clampedProgress,
     activeBeat,
-    shockwaveScale: Number((1 + finale01 * 2.4).toFixed(3)),
-    curtainSplit01: Number(finale01.toFixed(3)),
+    shockwaveScale,
+    shockwaveOpacity,
+    shatterProgress01,
+    hudOpacity,
+    canvasTiles: buildShatterBand({
+      rows: PIXEL_SHATTER_ROWS,
+      cols: PIXEL_SHATTER_COLS,
+      bandBiasY: 0,
+      seedOffset: 1,
+      clampedProgress,
+    }),
+    topBarTiles: buildShatterBand({
+      rows: 1,
+      cols: PIXEL_SHATTER_COLS,
+      bandBiasY: -105,
+      seedOffset: 7,
+      clampedProgress,
+      forceBandY: -0.45,
+    }),
+    bottomBarTiles: buildShatterBand({
+      rows: 1,
+      cols: PIXEL_SHATTER_COLS,
+      bandBiasY: 105,
+      seedOffset: 13,
+      clampedProgress,
+      forceBandY: 0.45,
+    }),
+  };
+}
+
+function buildPixelTileStyle(
+  tile: KineticPixelTile,
+  backgroundColor: string
+): CSSProperties {
+  const accentColor = (tile.row + tile.col) % 2 === 0 ? '#00F5D4' : '#FFE600';
+  return {
+    backgroundColor,
+    opacity: tile.opacity,
+    transform: `translate3d(${tile.offsetXpx}px, ${tile.offsetYpx}px, 0) scale(${tile.scale}) rotate(${tile.rotateDeg}deg)`,
+    borderColor: tile.isCracking ? accentColor : 'transparent',
   };
 }
 
 /**
- * 5.0s `GUSTO_OS v2.6` Kinetic Brutalist Slam Intro synchronized with
- * the Pure Three.js wireframe-to-solid procedural sculpture assembly.
+ * 5.0s `GUSTO_OS v2.6` Kinetic Brutalist Slam Intro with full-viewport
+ * pixel shatter + top/bottom bar scatter fade synchronized with Three.js assembly.
  */
 export function TerminalBootOverlay({
   state,
@@ -220,7 +348,16 @@ export function TerminalBootOverlay({
   );
 
   const slam = computeKineticSlamFrame(state.progress01);
-  const { activeBeat, shockwaveScale, curtainSplit01 } = slam;
+  const {
+    activeBeat,
+    shockwaveScale,
+    shockwaveOpacity,
+    shatterProgress01,
+    hudOpacity,
+    canvasTiles,
+    topBarTiles,
+    bottomBarTiles,
+  } = slam;
   const easedBar01 = computeEaseOutProgress01(slam.clampedProgress);
   const easedBarPercent = Math.min(100, Math.max(0, Math.round(easedBar01 * 100)));
   const latestLog = state.visibleLogs[state.visibleLogs.length - 1];
@@ -230,11 +367,27 @@ export function TerminalBootOverlay({
     '--kinetic-bg': activeBeat.bgHex,
     '--kinetic-ink': activeBeat.inkHex,
     '--kinetic-shockwave-scale': String(shockwaveScale),
-    '--kinetic-split-01': String(curtainSplit01),
+    '--kinetic-shockwave-opacity': String(shockwaveOpacity),
   } as CSSProperties;
 
   const isFinaleBeat = activeBeat.index === 3;
-  const isSplitting = curtainSplit01 > 0 || closing;
+  const isShattering = shatterProgress01 > 0 || closing;
+  const hudShiftRatio = 1 - hudOpacity;
+
+  const topHudStyle = {
+    opacity: hudOpacity,
+    transform: `translate3d(0, ${Number((-10 * hudShiftRatio).toFixed(2))}px, 0)`,
+  } as CSSProperties;
+
+  const centerHudStyle = {
+    opacity: hudOpacity,
+    transform: `scale(${Number((1 + 0.06 * hudShiftRatio).toFixed(3))})`,
+  } as CSSProperties;
+
+  const bottomHudStyle = {
+    opacity: hudOpacity,
+    transform: `translate3d(0, ${Number((10 * hudShiftRatio).toFixed(2))}px, 0)`,
+  } as CSSProperties;
 
   return (
     <div
@@ -245,19 +398,24 @@ export function TerminalBootOverlay({
       hidden={hidden}
       data-closing={closing ? '' : undefined}
       data-beat-index={activeBeat.index}
-      data-splitting={isSplitting ? 'true' : 'false'}
+      data-shattering={isShattering ? 'true' : 'false'}
       style={overlayStyle}
       className="neo-boot-overlay fixed inset-0 z-50 m-0 flex flex-col justify-between overflow-hidden"
     >
-      {/* Left & Right Brutalist Split Curtains (compositor translate3d) */}
+      {/* Full-Viewport 8x6 Pixel Shatter Backdrop */}
       <div
         aria-hidden="true"
-        className="neo-kinetic-curtain neo-kinetic-curtain-left absolute inset-y-0 left-0 w-[calc(50%+1px)] pointer-events-none"
-      />
-      <div
-        aria-hidden="true"
-        className="neo-kinetic-curtain neo-kinetic-curtain-right absolute inset-y-0 right-0 w-[calc(50%+1px)] pointer-events-none"
-      />
+        className="absolute inset-0 grid grid-cols-8 grid-rows-6 pointer-events-none"
+      >
+        {canvasTiles.map((tile) => (
+          <div
+            key={tile.index}
+            data-shatter-canvas-tile={tile.index}
+            style={buildPixelTileStyle(tile, activeBeat.bgHex)}
+            className="neo-kinetic-pixel h-full w-full"
+          />
+        ))}
+      </div>
 
       {/* Expanding Finale Shockwave Ring */}
       <div
@@ -267,27 +425,49 @@ export function TerminalBootOverlay({
         <div className="neo-kinetic-shockwave size-48 sm:size-64 border-4 border-[#00F5D4]" />
       </div>
 
-      {/* Top High-Contrast Telemetry & Skip Bar */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b-4 border-[#0A0A0A] bg-[#0A0A0A] px-4 py-3 text-[#F4F3EE] sm:px-6">
-        <div className="flex items-center gap-2.5 font-mono text-xs font-bold uppercase tracking-wider">
-          <Zap className="size-4 text-[#FFE600]" aria-hidden="true" />
-          <span>KINETIC_OVERCLOCK_SLAM // GUSTO_OS v2.6</span>
+      {/* Top High-Contrast Telemetry Bar + 8 Shattering Top-Band Pixels */}
+      <div className="relative z-10 px-4 py-3 text-[#F4F3EE] sm:px-6">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 grid grid-cols-8 pointer-events-none"
+        >
+          {topBarTiles.map((tile) => (
+            <div
+              key={tile.index}
+              data-shatter-top-tile={tile.index}
+              style={buildPixelTileStyle(tile, '#0A0A0A')}
+              className="neo-kinetic-pixel h-full w-full"
+            />
+          ))}
         </div>
 
-        <button
-          ref={skipButtonRef}
-          type="button"
-          onClick={onSkip}
-          className="neo-btn-tactile inline-flex items-center justify-center gap-2 bg-[#FFE600] text-[#0A0A0A] px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-wider cursor-pointer"
+        <div
+          style={topHudStyle}
+          className="neo-kinetic-hud relative z-10 flex flex-wrap items-center justify-between gap-3"
         >
-          <span aria-hidden="true">[</span>
-          <span>SKIP INTRO</span>
-          <span aria-hidden="true">-&gt;]</span>
-        </button>
+          <div className="flex items-center gap-2.5 font-mono text-xs font-bold uppercase tracking-wider">
+            <Zap className="size-4 text-[#FFE600]" aria-hidden="true" />
+            <span>KINETIC_OVERCLOCK_SLAM // GUSTO_OS v2.6</span>
+          </div>
+
+          <button
+            ref={skipButtonRef}
+            type="button"
+            onClick={onSkip}
+            className="neo-btn-tactile inline-flex items-center justify-center gap-2 bg-[#FFE600] text-[#0A0A0A] px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-wider cursor-pointer"
+          >
+            <span aria-hidden="true">[</span>
+            <span>SKIP INTRO</span>
+            <span aria-hidden="true">-&gt;]</span>
+          </button>
+        </div>
       </div>
 
       {/* Center Kinetic Typography Poster */}
-      <div className="neo-kinetic-poster relative z-10 flex flex-1 flex-col items-center justify-center px-4 text-center sm:px-8">
+      <div
+        style={centerHudStyle}
+        className="neo-kinetic-hud neo-kinetic-poster relative z-10 flex flex-1 flex-col items-center justify-center px-4 text-center sm:px-8"
+      >
         <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
           <span
             className={
@@ -339,9 +519,26 @@ export function TerminalBootOverlay({
         </p>
       </div>
 
-      {/* Bottom Accessible Progress & Telemetry Strip */}
-      <div className="relative z-10 border-t-4 border-[#0A0A0A] bg-[#0A0A0A] px-4 py-3 text-[#F4F3EE] sm:px-6">
-        <div className="mx-auto max-w-4xl space-y-2">
+      {/* Bottom Accessible Progress Bar + 8 Shattering Bottom-Band Pixels */}
+      <div className="relative z-10 px-4 py-3 text-[#F4F3EE] sm:px-6">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 grid grid-cols-8 pointer-events-none"
+        >
+          {bottomBarTiles.map((tile) => (
+            <div
+              key={tile.index}
+              data-shatter-bottom-tile={tile.index}
+              style={buildPixelTileStyle(tile, '#0A0A0A')}
+              className="neo-kinetic-pixel h-full w-full"
+            />
+          ))}
+        </div>
+
+        <div
+          style={bottomHudStyle}
+          className="neo-kinetic-hud relative z-10 mx-auto max-w-4xl space-y-2"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs font-bold">
             <label
               htmlFor="gusto-boot-progress"
