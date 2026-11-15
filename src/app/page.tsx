@@ -1,4 +1,4 @@
-import { ArrowUpRight, Code2, GraduationCap, Mail, Terminal } from 'lucide-react';
+import { Mail, Terminal } from 'lucide-react';
 import {
   EXPERIENCE_TIMELINE,
   FEATURED_PROJECTS,
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/NeoBrutalPrimitives';
 import { NeoNavbar } from '@/components/ui/NeoNavbar';
 import { Phase1PrimitiveLab } from '@/components/phase1/Phase1PrimitiveLab';
-import { GustoCanvasStage } from '@/components/three/GustoCanvasStage';
+import { HeroSection } from '@/components/hero/HeroSection';
 
 export default function HomePage() {
   return (
@@ -22,72 +22,8 @@ export default function HomePage() {
       <NeoNavbar />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 space-y-20">
-        {/* HERO FOUNDATION SHELL */}
-        <section className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <NeoBadge variant="yellow" pulseDot dotVariant="coral">
-                PHASE 1 // FOUNDATION &amp; DESIGN SYSTEM
-              </NeoBadge>
-              <NeoBadge variant="mint">{GUSTO_PROFILE.handle}</NeoBadge>
-              <NeoBadge variant="white">
-                <span className="inline-flex items-center gap-1.5">
-                  <GraduationCap className="size-3.5" aria-hidden="true" />
-                  TU_SE (TEP/TEPE) YR.3
-                </span>
-              </NeoBadge>
-            </div>
-
-            <h1
-              id="main-content"
-              tabIndex={-1}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.03]"
-            >
-              Hi, I&apos;m{' '}
-              <span className="inline-block border-[3px] border-[var(--ui-border-color)] bg-[#FFE600] text-[#0A0A0A] px-3 py-0.5 neo-shadow-sm">
-                {GUSTO_PROFILE.alias}
-              </span>{' '}
-              — {GUSTO_PROFILE.fullName}
-            </h1>
-
-            <p className="max-w-2xl text-lg sm:text-xl text-[var(--ink-muted)] leading-relaxed">
-              {GUSTO_PROFILE.storyLead}
-            </p>
-
-            <div className="flex flex-wrap gap-3.5 pt-1">
-              <NeoButton
-                href="#projects"
-                variant="yellow"
-                size="lg"
-                rightIcon={<ArrowUpRight className="size-5" />}
-              >
-                VIEW {PROJECTS_DATA.length} PROJECTS VAULT
-              </NeoButton>
-              <NeoButton
-                href={GUSTO_PROFILE.githubUrl}
-                external
-                variant="white"
-                size="lg"
-                leftIcon={<Code2 className="size-5" />}
-              >
-                GITHUB // {GUSTO_PROFILE.githubHandle}
-              </NeoButton>
-              <NeoButton
-                href={`mailto:${GUSTO_PROFILE.email}`}
-                variant="mint"
-                size="lg"
-                leftIcon={<Mail className="size-5" />}
-              >
-                DIRECT UPLINK
-              </NeoButton>
-            </div>
-          </div>
-
-          {/* 3D PROCEDURAL STAGE & TELEMETRY */}
-          <div className="lg:col-span-5">
-            <GustoCanvasStage />
-          </div>
-        </section>
+        {/* PHASE 3: <= 3.0s TERMINAL INTRO & SYNCHRONIZED HERO */}
+        <HeroSection />
 
         {/* SECTION 01: DESIGN SYSTEM PRIMITIVES LAB */}
         <section id="architecture" className="space-y-8">

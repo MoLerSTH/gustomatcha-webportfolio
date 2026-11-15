@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Orbit,
   Radio,
+  RotateCcw,
   Sparkles,
   Volume2,
   VolumeX,
@@ -31,14 +32,25 @@ const INITIAL_TELEMETRY: EngineTelemetrySnapshot = {
   assemblyProgress: 1,
 };
 
+export interface GustoCanvasStageProps {
+  assemblyProgress?: number;
+  isBooting?: boolean;
+  onReplayBoot?: () => void;
+}
+
 /**
  * Decoupled Pure Three.js Interactive Stage (`GustoWorldEngine` host).
  * Combines 60 FPS procedural WebGL rendering with keyboard-accessible
  * satellite node controls and real-time telemetry inspection.
  */
-export function GustoCanvasStage() {
+export function GustoCanvasStage({
+  assemblyProgress = 1,
+  isBooting = false,
+  onReplayBoot,
+}: GustoCanvasStageProps = {}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<GustoWorldEngine | null>(null);
+  const prevAssemblyProgressRef = useRef(1);
 
   const { isOverclock, toggleOverclock } = useBlueprintTheme();
   const { audioEnabled, toggleAudioSync, sampleAudio, triggerSynthNote } =
@@ -84,6 +96,19 @@ export function GustoCanvasStage() {
   useEffect(() => {
     engineRef.current?.setOverclockMode(isOverclock);
   }, [isOverclock]);
+
+  // Synchronize [0..1] boot assembly progress and fire completion shockwave
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    engine.setAssemblyProgress(assemblyProgress);
+
+    if (prevAssemblyProgressRef.current < 1 && assemblyProgress >= 1) {
+      engine.triggerShockwave('#FFE600');
+    }
+    prevAssemblyProgressRef.current = assemblyProgress;
+  }, [assemblyProgress]);
 
   // Feed Web Audio API frequency envelope into 3D engine only while active
   useEffect(() => {
@@ -147,6 +172,9 @@ export function GustoCanvasStage() {
             <NeoBadge variant="white">
               SCROLL: {Math.round(telemetry.scrollProgress * 100)}%
             </NeoBadge>
+            <NeoBadge variant={isBooting || assemblyProgress < 1 ? 'cobalt' : 'mint'}>
+              ASSEMBLY: {Math.max(0, Math.min(100, Math.round(assemblyProgress * 100)))}%
+            </NeoBadge>
           </div>
 
           {/* Top-Right Interactive Audio & Shockwave Controls */}
@@ -195,9 +223,22 @@ export function GustoCanvasStage() {
               <Orbit className="size-4" aria-hidden="true" />
               ORBITAL PROJECT NODES (3D RAYCAST + KEYBOARD SYNC):
             </span>
-            <span className="text-[var(--ink-muted)]">
-              ACTIVE: {activeProject.orbitalNodeLabel}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[var(--ink-muted)]">
+                ACTIVE: {activeProject.orbitalNodeLabel}
+              </span>
+              {onReplayBoot ? (
+                <NeoButton
+                  variant="white"
+                  size="sm"
+                  onClick={onReplayBoot}
+                  disabled={isBooting}
+                  leftIcon={<RotateCcw className="size-3.5" />}
+                >
+                  [REPLAY BOOT]
+                </NeoButton>
+              ) : null}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
