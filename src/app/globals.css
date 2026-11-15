@@ -320,13 +320,119 @@
   .neo-boot-progress-fill {
     transition-duration: 0ms;
   }
+
+  dialog.neo-dialog,
+  dialog.neo-dialog::backdrop {
+    transition-duration: 0ms;
+  }
+}
+
+/* Phase 4: Top-Layer Native <dialog> Transitions & Scroll-Lock Guard */
+dialog.neo-dialog {
+  margin: auto;
+  max-width: min(56rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  background-color: transparent;
+  color: inherit;
+  opacity: 0;
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 240ms;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+dialog.neo-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+:is(dialog.neo-dialog[open]):where(:not([data-closing])) {
+  opacity: 1;
+}
+
+dialog.neo-dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background-color: rgb(10 10 10 / 0);
+  backdrop-filter: blur(2px);
+  transition-property: background-color, display, overlay;
+  transition-duration: 240ms;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+
+:is(dialog.neo-dialog[open]):where(:not([data-closing]))::backdrop {
+  background-color: rgb(10 10 10 / 0.68);
+}
+
+@starting-style {
+  :is(dialog.neo-dialog[open]):where(:not([data-closing])) {
+    opacity: 0;
+  }
+
+  :is(dialog.neo-dialog[open]):where(:not([data-closing]))::backdrop {
+    background-color: rgb(10 10 10 / 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.neo-dialog {
+    transform: translateY(8px) scale(0.95);
+  }
+
+  :is(dialog.neo-dialog[open]):where(:not([data-closing])) {
+    transform: translateY(0) scale(1);
+  }
+
+  @starting-style {
+    :is(dialog.neo-dialog[open]):where(:not([data-closing])) {
+      transform: translateY(8px) scale(0.95);
+    }
+  }
+
+  .neo-tilt-card {
+    transform: perspective(950px) rotateX(var(--card-rx, 0deg)) rotateY(var(--card-ry, 0deg));
+    transition: transform 140ms ease-out;
+  }
+
+  .neo-tilt-card[data-tilting='true'] {
+    will-change: transform;
+  }
+}
+
+.neo-tilt-glare {
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at var(--card-glare-x, 50%) var(--card-glare-y, 50%),
+    rgb(255 255 255 / 0.24) 0%,
+    rgb(255 255 255 / 0) 62%
+  );
+  transition: opacity 160ms ease-out;
+}
+
+.neo-tilt-card[data-tilting='true'] .neo-tilt-glare {
+  opacity: 1;
+}
+
+/* Phase 4: Deferred Heavy Content Rendering (paired intrinsic size + fallback) */
+.neo-section-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 640px;
+}
+
+@supports not (content-visibility: auto) {
+  .neo-section-deferred {
+    contain: layout style paint;
+  }
 }
 
 /* Windows High Contrast / Forced Colors Mode Support */
 @media (forced-colors: active) {
   .neo-border,
   .neo-btn-tactile,
-  .neo-border-b {
+  .neo-border-b,
+  dialog.neo-dialog {
     border-color: CanvasText;
   }
 
