@@ -57,6 +57,8 @@ describe('globals.css Konami Game Boy console classes & accessibility media guar
     const coarseIndex = css.indexOf('@media (pointer: coarse)');
     expect(coarseIndex).toBeGreaterThan(-1);
     const coarseBlock = extractBraceBlock(css, coarseIndex);
+    expect(coarseBlock).toContain('.neo-dpad-grid');
+    expect(coarseBlock).toContain('repeat(3, 2.75rem)');
     expect(coarseBlock).toContain('.neo-dpad-btn');
     expect(coarseBlock).toContain('.neo-ab-btn');
     expect(coarseBlock).toContain('.neo-reset-pill');

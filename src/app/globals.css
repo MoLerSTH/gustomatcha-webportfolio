@@ -844,6 +844,11 @@ dialog.neo-dialog::backdrop {
 }
 
 @media (pointer: coarse) {
+  .neo-dpad-grid {
+    grid-template-columns: repeat(3, 2.75rem);
+    grid-template-rows: repeat(3, 2.75rem);
+  }
+
   .neo-toolbar-btn,
   .neo-dpad-btn,
   .neo-ab-btn {
