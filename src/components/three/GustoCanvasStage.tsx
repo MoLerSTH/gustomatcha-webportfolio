@@ -4,13 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Activity,
   ArrowUpRight,
-  Cpu,
   Orbit,
   Radio,
-  RotateCcw,
-  Sparkles,
-  Volume2,
-  VolumeX,
 } from 'lucide-react';
 import { FEATURED_PROJECTS, type ProjectItem } from '@/data/portfolioData';
 import {
@@ -48,7 +43,6 @@ const INITIAL_TELEMETRY: EngineTelemetrySnapshot = {
 export interface GustoCanvasStageProps {
   assemblyProgress?: number;
   isBooting?: boolean;
-  onReplayBoot?: () => void;
 }
 
 /**
@@ -59,7 +53,6 @@ export interface GustoCanvasStageProps {
 export function GustoCanvasStage({
   assemblyProgress = 1,
   isBooting = false,
-  onReplayBoot,
 }: GustoCanvasStageProps = {}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<GustoWorldEngine | null>(null);
@@ -67,8 +60,7 @@ export function GustoCanvasStage({
   const prevAssemblyProgressRef = useRef<number | null>(null);
 
   const { isOverclock, setOverclock, toggleOverclock } = useBlueprintTheme();
-  const { audioEnabled, toggleAudioSync, sampleAudio, triggerSynthNote } =
-    useAudioSync();
+  const { audioEnabled, sampleAudio, triggerSynthNote } = useAudioSync();
   const synthConfigRef = useRef<{
     waveform: SynthWaveform;
     octaveShift: SynthOctaveShift;
@@ -294,45 +286,6 @@ export function GustoCanvasStage({
             </NeoBadge>
           </div>
 
-          {/* Top-Right Interactive Audio, Overclock & Shockwave Controls */}
-          <div className="absolute top-3 right-3 flex flex-wrap items-center gap-2">
-            <NeoButton
-              type="button"
-              variant={isOverclock ? 'yellow' : 'white'}
-              size="sm"
-              aria-pressed={isOverclock}
-              onClick={toggleOverclock}
-              leftIcon={<Cpu className="size-3.5" />}
-            >
-              [OVERCLOCK: {isOverclock ? 'ON' : 'OFF'}]
-            </NeoButton>
-            <NeoButton
-              variant={audioEnabled ? 'mint' : 'white'}
-              size="sm"
-              onClick={() => void toggleAudioSync()}
-              leftIcon={
-                audioEnabled ? (
-                  <Volume2 className="size-3.5" />
-                ) : (
-                  <VolumeX className="size-3.5" />
-                )
-              }
-            >
-              [AUDIO_SYNC: {audioEnabled ? 'ON' : 'OFF'}]
-            </NeoButton>
-            <NeoButton
-              variant="coral"
-              size="sm"
-              onClick={() => {
-                engineRef.current?.triggerShockwave('#FF5D8F');
-                triggerSynthNote(392.0, 0.22);
-              }}
-              leftIcon={<Sparkles className="size-3.5" />}
-            >
-              PULSE_CORE
-            </NeoButton>
-          </div>
-
           {/* Bottom Hover / Raycast Status Banner */}
           <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 font-mono text-xs">
             <span className="border-2 border-[var(--ui-border-color)] bg-[var(--bg-canvas)] px-2.5 py-1 font-bold shadow-[3px_3px_0px_var(--ui-shadow-color)]">
@@ -350,22 +303,9 @@ export function GustoCanvasStage({
               <Orbit className="size-4" aria-hidden="true" />
               ORBITAL PROJECT NODES (3D RAYCAST + KEYBOARD SYNC):
             </span>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[var(--ink-muted)]">
-                ACTIVE: {activeProject.orbitalNodeLabel}
-              </span>
-              {onReplayBoot ? (
-                <NeoButton
-                  variant="white"
-                  size="sm"
-                  onClick={onReplayBoot}
-                  disabled={isBooting}
-                  leftIcon={<RotateCcw className="size-3.5" />}
-                >
-                  [REPLAY BOOT]
-                </NeoButton>
-              ) : null}
-            </div>
+            <span className="text-[var(--ink-muted)]">
+              ACTIVE: {activeProject.orbitalNodeLabel}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">

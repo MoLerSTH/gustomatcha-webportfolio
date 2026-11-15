@@ -305,7 +305,6 @@ export function HeroSection(): JSX.Element {
           <GustoCanvasStage
             assemblyProgress={viewState.assemblyProgress}
             isBooting={viewState.isBooting}
-            onReplayBoot={handleReplayBoot}
           />
         </div>
       </section>
