@@ -589,24 +589,38 @@ dialog.neo-dialog::backdrop {
 }
 
 .neo-gameboy-lcd {
-  background-color: #9bbc0f;
+  --lcd-bg: #9bbc0f;
+  --lcd-ink: #0f380f;
+  background-color: var(--lcd-bg);
   background-image:
     linear-gradient(to right, rgba(15, 56, 15, 0.08) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(15, 56, 15, 0.08) 1px, transparent 1px);
   background-size: 4px 4px;
-  color: #0f380f;
-  border: 2.5px solid #0f380f;
+  color: var(--lcd-ink);
+  border: 2.5px solid var(--lcd-ink);
   box-shadow: inset 3px 3px 0px rgba(15, 56, 15, 0.22);
 }
 
 :root[data-theme='overclock'] .neo-gameboy-lcd {
-  background-color: #071a1d;
+  --lcd-bg: #071a1d;
+  --lcd-ink: #00f5d4;
+  background-color: var(--lcd-bg);
   background-image:
     linear-gradient(to right, rgba(0, 245, 212, 0.08) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 245, 212, 0.08) 1px, transparent 1px);
-  color: #00f5d4;
+  color: var(--lcd-ink);
   border-color: var(--color-cyber-mint);
   box-shadow: inset 3px 3px 0px rgba(0, 245, 212, 0.16);
+}
+
+.neo-lcd-slot[data-state='matched'] {
+  background-color: var(--lcd-ink);
+  color: var(--lcd-bg);
+  border-color: var(--lcd-ink);
+}
+
+.neo-lcd-slot[data-state='next'] {
+  border-color: var(--lcd-ink);
 }
 
 .neo-gameboy-lcd[data-status='unlocked'] {
@@ -928,7 +942,8 @@ dialog.neo-dialog::backdrop {
   .neo-filter-pill[aria-pressed='true'],
   .neo-nav-link:is(:target-current, .target-current),
   .neo-dpad-btn[data-active='true'],
-  .neo-ab-btn[data-active='true'] {
+  .neo-ab-btn[data-active='true'],
+  .neo-lcd-slot[data-state='matched'] {
     background-color: Highlight;
     color: HighlightText;
     border-color: Highlight;

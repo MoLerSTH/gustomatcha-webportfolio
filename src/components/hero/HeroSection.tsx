@@ -25,6 +25,7 @@ import {
 } from '@/lib/bootSequence';
 import { NeoBadge, NeoButton } from '@/components/ui/NeoBrutalPrimitives';
 import { GustoCanvasStage } from '@/components/three/GustoCanvasStage';
+import { KonamiGameBoyWidget } from './KonamiGameBoyWidget';
 import { TerminalBootOverlay } from './TerminalBootOverlay';
 import {
   deriveHeroBootViewState,
@@ -298,6 +299,9 @@ export function HeroSection(): JSX.Element {
               </div>
             ))}
           </dl>
+
+          {/* Interactive Konami Code Pocket Console */}
+          <KonamiGameBoyWidget />
         </div>
 
         {/* 3D Procedural Stage & Telemetry */}
