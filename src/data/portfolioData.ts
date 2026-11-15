@@ -62,6 +62,16 @@ export interface TechSkillCategory {
   skills: TechSkill[];
 }
 
+export interface GustoPortraitSpec {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption: string;
+  badgeLabel: string;
+  defaultBackdrop: AccentColor;
+}
+
 export interface GustoProfile {
   fullName: string;
   alias: string;
@@ -78,6 +88,7 @@ export interface GustoProfile {
   storyLead: string;
   storyBody: string[];
   telemetrySpecs: { label: string; value: string }[];
+  portrait: GustoPortraitSpec;
 }
 
 export const GUSTO_PROFILE: GustoProfile = {
@@ -105,6 +116,15 @@ export const GUSTO_PROFILE: GustoProfile = {
     { label: 'GITHUB_UPLINK', value: 'github.com/MoLerSTH' },
     { label: 'RUNTIME_TARGET', value: '60 FPS // ZERO_BLOAT' },
   ],
+  portrait: {
+    src: '/images/gusto-portrait.webp',
+    width: 2400,
+    height: 1600,
+    alt: 'Hattakorn Pongsawai (Gusto) presenting on stage with a microphone and slide clicker',
+    caption: 'STAGE_CAPTURE // LIVE ARCHITECTURE & AI SYSTEMS PITCH',
+    badgeLabel: 'STICKER_CUTOUT // VERIFIED',
+    defaultBackdrop: 'yellow',
+  },
 };
 
 export const PROJECTS_DATA: ProjectItem[] = [

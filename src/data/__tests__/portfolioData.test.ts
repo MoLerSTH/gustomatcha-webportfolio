@@ -60,4 +60,15 @@ describe('Gusto Portfolio Data Layer Integrity', () => {
       ])
     );
   });
+
+  it('defines intrinsic 2400x1600 WebP portrait metadata with non-cliche alt text', () => {
+    expect(GUSTO_PROFILE.portrait.src).toBe('/images/gusto-portrait.webp');
+    expect(GUSTO_PROFILE.portrait.width).toBe(2400);
+    expect(GUSTO_PROFILE.portrait.height).toBe(1600);
+    expect(GUSTO_PROFILE.portrait.defaultBackdrop).toBe('yellow');
+    expect(GUSTO_PROFILE.portrait.alt.length).toBeGreaterThan(20);
+    expect(GUSTO_PROFILE.portrait.alt.toLowerCase()).not.toMatch(
+      /^(image|picture|photo) of\b/,
+    );
+  });
 });
