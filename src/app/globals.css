@@ -288,6 +288,7 @@
 .neo-boot-overlay {
   display: flex;
   contain: layout style paint;
+  margin: 0;
   opacity: 1;
   translate: 0;
   transition:
@@ -341,13 +342,19 @@
 }
 
 .neo-kinetic-curtain-left {
-  border-right: 3px solid #0a0a0a;
   transform: translate3d(calc(var(--kinetic-split-01, 0) * -28vw), 0, 0);
 }
 
 .neo-kinetic-curtain-right {
-  border-left: 3px solid #0a0a0a;
   transform: translate3d(calc(var(--kinetic-split-01, 0) * 28vw), 0, 0);
+}
+
+.neo-boot-overlay[data-splitting='true'] .neo-kinetic-curtain-left {
+  border-right: 3px solid #0a0a0a;
+}
+
+.neo-boot-overlay[data-splitting='true'] .neo-kinetic-curtain-right {
+  border-left: 3px solid #0a0a0a;
 }
 
 .neo-boot-overlay:where([hidden], [data-closing]) .neo-kinetic-curtain-left {

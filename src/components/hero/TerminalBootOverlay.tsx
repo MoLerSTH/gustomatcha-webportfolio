@@ -219,6 +219,7 @@ export function TerminalBootOverlay({
   } as CSSProperties;
 
   const isFinaleBeat = activeBeat.index === 3;
+  const isSplitting = curtainSplit01 > 0 || closing;
 
   return (
     <div
@@ -229,29 +230,30 @@ export function TerminalBootOverlay({
       hidden={hidden}
       data-closing={closing ? '' : undefined}
       data-beat-index={activeBeat.index}
+      data-splitting={isSplitting ? 'true' : 'false'}
       style={overlayStyle}
-      className="neo-boot-overlay fixed inset-0 z-50 flex flex-col justify-between overflow-hidden"
+      className="neo-boot-overlay fixed inset-0 z-50 m-0 flex flex-col justify-between overflow-hidden"
     >
       {/* Left & Right Brutalist Split Curtains (compositor translate3d) */}
       <div
         aria-hidden="true"
-        className="neo-kinetic-curtain neo-kinetic-curtain-left fixed inset-y-0 left-0 w-1/2 pointer-events-none"
+        className="neo-kinetic-curtain neo-kinetic-curtain-left absolute inset-y-0 left-0 w-[calc(50%+1px)] pointer-events-none"
       />
       <div
         aria-hidden="true"
-        className="neo-kinetic-curtain neo-kinetic-curtain-right fixed inset-y-0 right-0 w-1/2 pointer-events-none"
+        className="neo-kinetic-curtain neo-kinetic-curtain-right absolute inset-y-0 right-0 w-[calc(50%+1px)] pointer-events-none"
       />
 
       {/* Expanding Finale Shockwave Ring */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 flex items-center justify-center pointer-events-none"
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
         <div className="neo-kinetic-shockwave size-48 sm:size-64 border-4 border-[#00F5D4]" />
       </div>
 
-      {/* Top High-Contrast Telemetry & Skip Header */}
-      <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b-4 border-[#0A0A0A] bg-[#0A0A0A] px-4 py-3 text-[#F4F3EE] sm:px-6">
+      {/* Top High-Contrast Telemetry & Skip Bar */}
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b-4 border-[#0A0A0A] bg-[#0A0A0A] px-4 py-3 text-[#F4F3EE] sm:px-6">
         <div className="flex items-center gap-2.5 font-mono text-xs font-bold uppercase tracking-wider">
           <Zap className="size-4 text-[#FFE600]" aria-hidden="true" />
           <span>KINETIC_OVERCLOCK_SLAM // GUSTO_OS v2.6</span>
@@ -267,10 +269,10 @@ export function TerminalBootOverlay({
           <span>SKIP INTRO</span>
           <span aria-hidden="true">-&gt;]</span>
         </button>
-      </header>
+      </div>
 
       {/* Center Kinetic Typography Poster */}
-      <main className="neo-kinetic-poster relative z-10 flex flex-1 flex-col items-center justify-center px-4 text-center sm:px-8">
+      <div className="neo-kinetic-poster relative z-10 flex flex-1 flex-col items-center justify-center px-4 text-center sm:px-8">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
           <span
             className={
@@ -320,10 +322,10 @@ export function TerminalBootOverlay({
         >
           {activeBeat.subtag}
         </p>
-      </main>
+      </div>
 
       {/* Bottom Accessible Progress & Telemetry Strip */}
-      <footer className="relative z-10 border-t-4 border-[#0A0A0A] bg-[#0A0A0A] px-4 py-3 text-[#F4F3EE] sm:px-6">
+      <div className="relative z-10 border-t-4 border-[#0A0A0A] bg-[#0A0A0A] px-4 py-3 text-[#F4F3EE] sm:px-6">
         <div className="mx-auto max-w-4xl space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs font-bold">
             <label
@@ -362,7 +364,7 @@ export function TerminalBootOverlay({
             <span>ESC OR CLICK TOP-RIGHT TO SKIP</span>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }

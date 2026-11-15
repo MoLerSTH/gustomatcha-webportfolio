@@ -89,6 +89,9 @@ describe('TerminalBootOverlay helpers & discrete display probe', () => {
     expect(html).toContain('SKIP INTRO');
     expect(html).toContain('id="gusto-boot-title"');
     expect(html).toContain('id="gusto-boot-progress"');
+    expect(html).toContain('m-0');
+    expect(html).toContain('data-splitting="false"');
+    expect(html).not.toContain('<main');
     expect(html).not.toMatch(/[\u0E00-\u0E7F]/);
 
     const finaleState = computeBootSequenceState(2100, 2200);
@@ -103,11 +106,13 @@ describe('TerminalBootOverlay helpers & discrete display probe', () => {
     expect(finaleHtml).toContain('GUSTO_OS');
     expect(finaleHtml).toContain('04 // 60FPS WEBGL CORE READY');
     expect(finaleHtml).toContain('data-beat-index="3"');
+    expect(finaleHtml).toContain('data-splitting="true"');
     expect(finaleHtml).not.toMatch(/[\u0E00-\u0E7F]/);
   });
 
-  it('neutralizes kinetic slam curtains, shockwave, and poster motion under prefers-reduced-motion: reduce', () => {
+  it('neutralizes kinetic slam curtains, shockwave, and poster motion under prefers-reduced-motion: reduce, and resets overlay margin against parent space-y-*', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/app/globals.css'), 'utf8');
+    expect(css).toMatch(/\.neo-boot-overlay\s*\{[^}]*margin:\s*0;/);
     const reducedIndex = css.lastIndexOf('@media (prefers-reduced-motion: reduce)');
     expect(reducedIndex).toBeGreaterThan(-1);
     const reducedBlock = css.slice(reducedIndex);
