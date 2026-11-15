@@ -37,7 +37,7 @@ export function ExperienceTimelineSection() {
     <section
       id="experience"
       aria-labelledby="heading-experience"
-      className="neo-section-deferred space-y-8"
+      className="neo-section-deferred scroll-mt-24 space-y-8"
     >
       <NeoSectionHeader
         indexCode="03 // EXPERIENCE & COMPETITIONS TIMELINE"

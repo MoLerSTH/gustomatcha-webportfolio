@@ -106,6 +106,11 @@ describe('portfolioSectionControllers', () => {
         (p) => p.id
       )
     ).toEqual(['gistda-calval']);
+    expect(
+      filterVaultProjects(PROJECTS_DATA, { searchQuery: 'multi-stage' }).map(
+        (p) => p.id
+      )
+    ).toEqual(['gistda-calval']);
   });
 
   it('filters experience timeline by track and computes exact track counts', () => {

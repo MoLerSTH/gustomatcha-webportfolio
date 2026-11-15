@@ -159,6 +159,7 @@ export function filterVaultProjects(
       project.role,
       project.category,
       project.summary,
+      ...project.architectureHighlights,
       ...project.techStack,
       ...project.metrics.flatMap((m) => [m.label, m.value]),
     ]

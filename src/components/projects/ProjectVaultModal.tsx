@@ -284,7 +284,10 @@ export function ProjectVaultModal({
             </NeoButton>
           </header>
 
-          <div className="flex-1 space-y-6 overflow-y-auto overscroll-y-contain p-5 sm:p-6">
+          <div
+            key={project.id}
+            className="flex-1 space-y-6 overflow-y-auto overscroll-y-contain p-5 sm:p-6"
+          >
             <div className="space-y-2.5">
               <div className="flex flex-wrap items-center gap-2">
                 <NeoBadge variant={project.accent}>{project.category}</NeoBadge>

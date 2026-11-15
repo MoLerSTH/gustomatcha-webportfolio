@@ -133,7 +133,7 @@ export function ProjectsVaultSection() {
     <section
       id="projects"
       aria-labelledby="heading-projects"
-      className="neo-section-deferred space-y-10"
+      className="neo-section-deferred scroll-mt-24 space-y-10"
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <NeoSectionHeader

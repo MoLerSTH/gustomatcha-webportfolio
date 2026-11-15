@@ -39,7 +39,7 @@ export function AboutArchitectureSection() {
     <section
       id="architecture"
       aria-labelledby="heading-architecture"
-      className="space-y-8"
+      className="scroll-mt-24 space-y-8"
     >
       <NeoSectionHeader
         indexCode="01 // ABOUT & ARCHITECTURE SYSTEM"
@@ -97,7 +97,7 @@ export function AboutArchitectureSection() {
         <NeoCard
           variant="white"
           headerVariant="dark"
-          windowTitle="ACADEMIC_NODE // KMITL_CS"
+          windowTitle="ACADEMIC_NODE // TU_SE"
           windowTag="ACTIVE"
           className="lg:col-span-5"
           bodyClassName="flex flex-col justify-between gap-5"

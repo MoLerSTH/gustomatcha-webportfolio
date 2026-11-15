@@ -34,7 +34,7 @@ export function TechStackMatrixSection() {
     <section
       id="stack"
       aria-labelledby="heading-stack"
-      className="neo-section-deferred space-y-8"
+      className="neo-section-deferred scroll-mt-24 space-y-8"
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <NeoSectionHeader
