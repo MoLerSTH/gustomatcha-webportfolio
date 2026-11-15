@@ -490,6 +490,7 @@ export class GustoWorldEngine {
   };
 
   private handlePointerLeave = (): void => {
+    if (this.isDisposed) return;
     this.hasPointerInside = false;
     applyContainerCursorState(this.container, 'crosshair');
     if (this.hoveredProjectId !== null) {

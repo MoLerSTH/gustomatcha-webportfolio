@@ -89,9 +89,20 @@ describe('GustoWorldEngine Pure Logic Helpers', () => {
     expect(domContainer.dataset.cursor).toBe('crosshair');
 
     applyContainerCursorState(domContainer, 'pointer');
+    const engineInternal = engine as unknown as {
+      handlePointerLeave: () => void;
+    };
+    engineInternal.handlePointerLeave();
+    expect(domContainer.dataset.cursor).toBe('crosshair');
+
+    applyContainerCursorState(domContainer, 'pointer');
     engine.dispose();
     expect(domContainer.dataset.cursor).toBeUndefined();
     expect(domContainer.style.cursor).toBe('');
+
+    // Simulate a late pointerleave arriving during/after unmount disposal
+    engineInternal.handlePointerLeave();
+    expect(domContainer.dataset.cursor).toBeUndefined();
 
     expect(() => applyContainerCursorState(null, 'pointer')).not.toThrow();
     expect(() => applyContainerCursorState(undefined, null)).not.toThrow();
