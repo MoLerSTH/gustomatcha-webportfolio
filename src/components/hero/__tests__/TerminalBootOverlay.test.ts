@@ -1,6 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 import {
+  KINETIC_SLAM_BEATS,
+  TerminalBootOverlay,
   canTransitionDisplay,
+  computeKineticSlamFrame,
   formatBootTelemetryLine,
   resolveOverlayAttributes,
 } from '../TerminalBootOverlay';
@@ -37,5 +44,74 @@ describe('TerminalBootOverlay helpers & discrete display probe', () => {
       hidden: false,
       closing: true,
     });
+  });
+
+  it('cycles through exactly 4 WCAG-safe kinetic typography beats and triggers end shockwave (Review Focus #2 & #4)', () => {
+    expect(KINETIC_SLAM_BEATS).toHaveLength(4);
+
+    const nanFrame = computeKineticSlamFrame(Number.NaN);
+    expect(nanFrame.clampedProgress).toBe(0);
+    expect(nanFrame.activeBeat.word).toBe('BUILD.');
+    expect(nanFrame.shockwaveScale).toBe(1);
+    expect(nanFrame.curtainSplit01).toBe(0);
+
+    const low = computeKineticSlamFrame(-1);
+    expect(low.clampedProgress).toBe(0);
+    expect(low.activeBeat.word).toBe('BUILD.');
+
+    expect(computeKineticSlamFrame(0.35).activeBeat.word).toBe('GEO_AI.');
+    expect(computeKineticSlamFrame(0.65).activeBeat.word).toBe('DEFEND.');
+
+    const finale = computeKineticSlamFrame(0.92);
+    expect(finale.activeBeat.word).toBe('GUSTO_OS');
+    expect(finale.shockwaveScale).toBeGreaterThan(1);
+    expect(finale.curtainSplit01).toBeGreaterThan(0);
+
+    const over = computeKineticSlamFrame(1.5);
+    expect(over.clampedProgress).toBe(1);
+    expect(over.activeBeat.word).toBe('GUSTO_OS');
+    expect(over.curtainSplit01).toBe(1);
+  });
+
+  it('renders full-viewport Kinetic Brutalist Slam poster and shockwave ring in English', () => {
+    const state = computeBootSequenceState(500, 2200);
+    const html = renderToStaticMarkup(
+      createElement(TerminalBootOverlay, {
+        state,
+        isVisible: true,
+        isClosing: false,
+        onSkip: () => {},
+      })
+    );
+    expect(html).toContain('KINETIC_OVERCLOCK_SLAM');
+    expect(html).toContain('BUILD.');
+    expect(html).toContain('01 // FULL-STACK ARCHITECTURE');
+    expect(html).toContain('SKIP INTRO');
+    expect(html).toContain('id="gusto-boot-title"');
+    expect(html).toContain('id="gusto-boot-progress"');
+    expect(html).not.toMatch(/[\u0E00-\u0E7F]/);
+
+    const finaleState = computeBootSequenceState(2100, 2200);
+    const finaleHtml = renderToStaticMarkup(
+      createElement(TerminalBootOverlay, {
+        state: finaleState,
+        isVisible: true,
+        isClosing: false,
+        onSkip: () => {},
+      })
+    );
+    expect(finaleHtml).toContain('GUSTO_OS');
+    expect(finaleHtml).toContain('04 // 60FPS WEBGL CORE READY');
+    expect(finaleHtml).toContain('data-beat-index="3"');
+    expect(finaleHtml).not.toMatch(/[\u0E00-\u0E7F]/);
+  });
+
+  it('neutralizes kinetic slam curtains, shockwave, and poster motion under prefers-reduced-motion: reduce', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/app/globals.css'), 'utf8');
+    const reducedIndex = css.lastIndexOf('@media (prefers-reduced-motion: reduce)');
+    expect(reducedIndex).toBeGreaterThan(-1);
+    const reducedBlock = css.slice(reducedIndex);
+    expect(reducedBlock).toContain('.neo-kinetic-curtain');
+    expect(reducedBlock).toContain('.neo-kinetic-shockwave');
   });
 });
