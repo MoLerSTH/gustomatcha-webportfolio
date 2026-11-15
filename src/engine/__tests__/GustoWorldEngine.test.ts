@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   RapidClickDetector,
   computeScrollChoreographyState,
+  computeAssemblyVisualState,
 } from '../GustoWorldEngine';
 
 describe('GustoWorldEngine Pure Logic Helpers', () => {
@@ -25,5 +26,27 @@ describe('GustoWorldEngine Pure Logic Helpers', () => {
     expect(start.ringExpansion).toBe(1);
     expect(mid.ringExpansion).toBeGreaterThan(start.ringExpansion);
     expect(end.cameraZ).not.toBe(start.cameraZ);
+  });
+
+  it('interpolates 3D wireframe-to-solid assembly state across [0..1] and clamps out-of-range inputs', () => {
+    const rawWireframe = computeAssemblyVisualState(0);
+    const halfAssembled = computeAssemblyVisualState(0.5);
+    const fullyAssembled = computeAssemblyVisualState(1);
+    const clampedLow = computeAssemblyVisualState(-2);
+    const clampedHigh = computeAssemblyVisualState(3);
+    const clampedNaN = computeAssemblyVisualState(Number.NaN);
+
+    expect(rawWireframe.solidFillMix).toBe(0);
+    expect(rawWireframe.wireframeExpansion).toBeGreaterThan(fullyAssembled.wireframeExpansion);
+    expect(halfAssembled.coreScale).toBeGreaterThan(rawWireframe.coreScale);
+    expect(fullyAssembled.coreScale).toBeCloseTo(1, 4);
+    expect(fullyAssembled.wireframeExpansion).toBeCloseTo(1, 4);
+    expect(fullyAssembled.ringAssemblyScale).toBeCloseTo(1, 4);
+    expect(fullyAssembled.satelliteOrbitFactor).toBeCloseTo(1, 4);
+    expect(fullyAssembled.solidFillMix).toBeCloseTo(1, 4);
+
+    expect(clampedLow).toEqual(rawWireframe);
+    expect(clampedHigh).toEqual(fullyAssembled);
+    expect(clampedNaN).toEqual(rawWireframe);
   });
 });

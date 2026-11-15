@@ -35,6 +35,7 @@ export const CORE_FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uAccentColor;
   uniform vec3 uInkColor;
   uniform float uOverclockMode;
+  uniform float uAssemblyProgress;
   uniform float uTime;
   uniform float uAudioPulse;
   uniform float uShockwave;
@@ -63,6 +64,13 @@ export const CORE_FRAGMENT_SHADER = /* glsl */ `
     float energyBand = smoothstep(0.03, 0.14, abs(vDisplacement) + uShockwave * 0.15);
     surfaceColor = mix(surfaceColor, uSecondaryColor, energyBand * 0.65);
 
+    // Wireframe-to-Solid Assembly Scanline Grid (0.0 = raw blueprint wireframe -> 1.0 = solid)
+    float gridA = step(0.62, fract(vWorldPosition.y * 9.0 + vWorldPosition.x * 9.0));
+    float gridB = step(0.62, fract(vWorldPosition.y * 9.0 - vWorldPosition.x * 9.0));
+    float wireMask = max(gridA, gridB);
+    float rimEdge = step(0.56, rim);
+    float assemblyMix = clamp(uAssemblyProgress, 0.0, 1.0);
+
     if (uOverclockMode > 0.5) {
       // Blueprint / Wireframe Dimension Mode
       float scanline = step(0.45, fract(vWorldPosition.y * 7.5 - uTime * 1.8));
@@ -71,9 +79,9 @@ export const CORE_FRAGMENT_SHADER = /* glsl */ `
       vec3 electricYellow = vec3(1.0, 0.9, 0.0);
 
       vec3 wireGlow = mix(neonMint, electricYellow, energyBand);
-      float rimEdge = step(0.56, rim);
       vec3 finalOverclock = mix(blueprintBase, wireGlow, max(rimEdge, scanline * 0.42));
-      gl_FragColor = vec4(finalOverclock, 1.0);
+      float overclockAlpha = mix(clamp(wireMask + rimEdge + 0.12, 0.0, 1.0), 1.0, assemblyMix);
+      gl_FragColor = vec4(finalOverclock, overclockAlpha);
       return;
     }
 
@@ -82,7 +90,11 @@ export const CORE_FRAGMENT_SHADER = /* glsl */ `
       surfaceColor = uInkColor;
     }
 
-    gl_FragColor = vec4(surfaceColor, 1.0);
+    vec3 wireframeTint = mix(vec3(0.97, 0.98, 0.99), uInkColor, max(wireMask * 0.85, rimEdge));
+    vec3 assembledColor = mix(wireframeTint, surfaceColor, assemblyMix);
+    float assembledAlpha = mix(clamp(wireMask * 0.9 + rimEdge + 0.16, 0.0, 1.0), 1.0, assemblyMix);
+
+    gl_FragColor = vec4(assembledColor, assembledAlpha);
   }
 `;
 

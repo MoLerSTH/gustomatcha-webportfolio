@@ -15,6 +15,7 @@ describe('proceduralShaders & Satellite Node Specs', () => {
     expect(CORE_VERTEX_SHADER).toContain('uniform float uShockwave;');
     expect(CORE_FRAGMENT_SHADER).toContain('uniform vec3 uPrimaryColor;');
     expect(CORE_FRAGMENT_SHADER).toContain('uniform float uOverclockMode;');
+    expect(CORE_FRAGMENT_SHADER).toContain('uniform float uAssemblyProgress;');
   });
 
   it('maps all 3 satellite nodes to the exact Top 3 Featured Project IDs', () => {

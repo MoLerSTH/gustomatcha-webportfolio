@@ -28,6 +28,7 @@ const INITIAL_TELEMETRY: EngineTelemetrySnapshot = {
   scrollProgress: 0,
   audioLevel: 0,
   overclockMode: false,
+  assemblyProgress: 1,
 };
 
 /**

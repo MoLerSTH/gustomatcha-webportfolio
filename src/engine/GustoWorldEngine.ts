@@ -24,6 +24,14 @@ export interface ScrollChoreographyState {
   ringExpansion: number;
 }
 
+export interface AssemblyVisualState {
+  coreScale: number;
+  wireframeExpansion: number;
+  ringAssemblyScale: number;
+  satelliteOrbitFactor: number;
+  solidFillMix: number;
+}
+
 export interface EngineTelemetrySnapshot {
   fps: number;
   tier: PerformanceTier;
@@ -32,6 +40,7 @@ export interface EngineTelemetrySnapshot {
   scrollProgress: number;
   audioLevel: number;
   overclockMode: boolean;
+  assemblyProgress: number;
 }
 
 export interface GustoEngineCallbacks {
@@ -93,6 +102,29 @@ export function computeScrollChoreographyState(
     coreRotationX: Number((smooth * Math.PI * 0.75).toFixed(4)),
     wireframeScale: Number((1 + Math.sin(smooth * Math.PI) * 0.24).toFixed(4)),
     ringExpansion: Number((1 + smooth * 0.42).toFixed(4)),
+  };
+}
+
+/**
+ * Pure wireframe-to-solid assembly choreography mapper translating [0..1]
+ * boot progress into core scale, wireframe shell contraction, orbital ring
+ * convergence, satellite pull-in, and fragment solid-fill mix.
+ */
+export function computeAssemblyVisualState(
+  assemblyProgress01: number
+): AssemblyVisualState {
+  const clamped = Math.max(
+    0,
+    Math.min(1, Number.isFinite(assemblyProgress01) ? assemblyProgress01 : 0)
+  );
+  const smooth = clamped * clamped * (3 - 2 * clamped);
+
+  return {
+    coreScale: Number((0.38 + 0.62 * smooth).toFixed(4)),
+    wireframeExpansion: Number((1.55 - 0.55 * smooth).toFixed(4)),
+    ringAssemblyScale: Number((0.55 + 0.45 * smooth).toFixed(4)),
+    satelliteOrbitFactor: Number((1.45 - 0.45 * smooth).toFixed(4)),
+    solidFillMix: Number(smooth.toFixed(4)),
   };
 }
 
@@ -246,6 +278,7 @@ export class GustoWorldEngine {
     const coreMat = new THREE.ShaderMaterial({
       vertexShader: CORE_VERTEX_SHADER,
       fragmentShader: CORE_FRAGMENT_SHADER,
+      transparent: true,
       uniforms: {
         uTime: { value: 0 },
         uPointerVelocity: { value: 0 },
@@ -604,8 +637,9 @@ export class GustoWorldEngine {
     this.pointerVelocity = Math.max(0, this.pointerVelocity * 0.92);
     this.shockwaveIntensity = Math.max(0, this.shockwaveIntensity * 0.91);
 
-    // Scroll choreography state
+    // Scroll & assembly choreography states
     const scrollState = computeScrollChoreographyState(this.scrollProgress);
+    const assemblyState = computeAssemblyVisualState(this.assemblyProgress);
 
     this.camera.position.z += (scrollState.cameraZ - this.camera.position.z) * 0.08;
     this.camera.position.y += (scrollState.cameraY - this.camera.position.y) * 0.08;
@@ -627,10 +661,10 @@ export class GustoWorldEngine {
       uniforms.uPointerVelocity.value = this.pointerVelocity;
       uniforms.uAudioPulse.value = this.audioPulseLevel;
       uniforms.uShockwave.value = this.shockwaveIntensity;
-      uniforms.uAssemblyProgress.value = this.assemblyProgress;
+      uniforms.uAssemblyProgress.value = assemblyState.solidFillMix;
 
       const coreScale =
-        (0.35 + 0.65 * this.assemblyProgress) *
+        assemblyState.coreScale *
         (1 + this.audioPulseLevel * 0.14 + this.shockwaveIntensity * 0.1);
       this.coreMesh.scale.setScalar(coreScale);
     }
@@ -640,7 +674,9 @@ export class GustoWorldEngine {
       this.wireframeGroup.rotation.y = -this.elapsedSeconds * 0.42;
       this.wireframeGroup.rotation.z = this.elapsedSeconds * 0.21;
       const wireScale =
-        scrollState.wireframeScale * (1 + this.audioPulseLevel * 0.08);
+        scrollState.wireframeScale *
+        assemblyState.wireframeExpansion *
+        (1 + this.audioPulseLevel * 0.08);
       this.wireframeGroup.scale.setScalar(wireScale);
     }
 
@@ -650,7 +686,9 @@ export class GustoWorldEngine {
       ring.rotation.z += deltaSec * 0.38 * dir * this.quality.motionScale;
       ring.rotation.x += deltaSec * 0.16 * dir * this.quality.motionScale;
       ring.scale.setScalar(
-        scrollState.ringExpansion * (1 + this.audioPulseLevel * 0.06 * (idx + 1))
+        scrollState.ringExpansion *
+          assemblyState.ringAssemblyScale *
+          (1 + this.audioPulseLevel * 0.06 * (idx + 1))
       );
     });
 
@@ -659,7 +697,7 @@ export class GustoWorldEngine {
       const pos = computeSatelliteWorldPosition(
         node.spec,
         this.elapsedSeconds,
-        scrollState.ringExpansion
+        scrollState.ringExpansion * assemblyState.satelliteOrbitFactor
       );
       node.group.position.set(pos.x, pos.y, pos.z);
       node.hullMesh.rotation.y += deltaSec * 1.2 * this.quality.motionScale;
@@ -695,12 +733,14 @@ export class GustoWorldEngine {
         scrollProgress: this.scrollProgress,
         audioLevel: this.audioPulseLevel,
         overclockMode: this.overclockMode,
+        assemblyProgress: this.assemblyProgress,
       });
     }
   }
 
   public setAssemblyProgress(progress01: number): void {
-    this.assemblyProgress = Math.max(0, Math.min(1, progress01));
+    const safe = Number.isFinite(progress01) ? progress01 : 0;
+    this.assemblyProgress = Math.max(0, Math.min(1, safe));
   }
 
   public setOverclockMode(enabled: boolean): void {
@@ -724,7 +764,8 @@ export class GustoWorldEngine {
   }
 
   public setAudioPulseLevel(level01: number): void {
-    this.audioPulseLevel = Math.max(0, Math.min(1, level01));
+    const safe = Number.isFinite(level01) ? level01 : 0;
+    this.audioPulseLevel = Math.max(0, Math.min(1, safe));
   }
 
   public triggerShockwave(accentHex?: string): void {
